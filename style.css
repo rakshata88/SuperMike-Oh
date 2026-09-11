@@ -151,3 +151,10 @@
 
 .game-shell.is-session:not(:has(.modal)){touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .game-shell:has(.modal) .touch-movement,.game-shell:has(.modal) .touch-actions{visibility:hidden}
+.session-fullscreen{display:none;position:absolute;right:calc(22px + env(safe-area-inset-right));top:calc(72px + env(safe-area-inset-top));z-index:5;width:44px;height:44px;border:1px solid #ffffff60;border-radius:12px;background:#173d32db;color:#fff7dd;font-size:24px;touch-action:manipulation}
+.is-session .session-fullscreen,.is-fullscreen .session-fullscreen{display:grid;place-items:center}
+.game-shell.is-fullscreen{position:fixed;inset:0;width:100%;height:100dvh;max-width:none;z-index:30;aspect-ratio:auto;border-radius:0;display:block}
+.game-shell.is-fullscreen:not(.is-session){padding:0}
+.game-shell.is-fullscreen:not(.is-session) #game{width:100%;height:100%;aspect-ratio:auto}
+.rotate-notice{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;background:#17382ff5;color:#fff5d7;touch-action:manipulation}
+.rotate-notice>span{font-size:80px;line-height:1}.rotate-notice h2{font:800 28px Outfit,sans-serif}.rotate-notice p{font-size:14px;line-height:1.8;max-width:320px}

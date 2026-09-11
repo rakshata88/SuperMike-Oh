@@ -4,8 +4,8 @@ function ellipse(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,
 function path(c,points,fill,stroke=null,width=2){c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();if(fill){c.fillStyle=fill;c.fill()}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke()}}
 function rect(c,x,y,w,h,color,r=0){c.fillStyle=color;c.beginPath();c.roundRect(x,y,w,h,r);c.fill()}
 function line(c,points,color,width=3){c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.stroke()}
-export function drawMike(c,x,y,scale=1,superMode=false,pose='idle',t=0,face=1){
-  if(drawCharacter(c,superMode?'super':'normal',x,y,scale,pose,t,face))return;
+export function drawMike(c,x,y,scale=1,superMode=false,pose='idle',t=0,face=1,gait=null){
+  if(drawCharacter(c,superMode?'super':'normal',x,y,scale,pose,t,face,gait))return;
   c.save();c.translate(x,y);c.scale(scale*face,scale);c.lineJoin='round';
   const run=pose==='run',jump=pose==='jump',win=pose==='win',duck=pose==='duck';
   const stride=run?Math.sin(t*15)*10:0;const bob=run?Math.abs(Math.sin(t*15))*2:Math.sin(t*2)*1.1;
@@ -130,7 +130,7 @@ export class Renderer {
     if(g.buffs.blessing>0||g.buffs.bell>0||g.transform>0){const xx=p.x+p.w/2,yy=p.y+p.h/2;const glow=c.createRadialGradient(xx,yy,5,xx,yy,90);glow.addColorStop(0,'#fff2a899');glow.addColorStop(1,'#fff2a800');ellipse(c,xx,yy,90,90,glow)}
     let pose=g.completed?'win':p.attack>0?'attack':p.duck?'duck':!p.grounded?'jump':Math.abs(p.vx)>15?'run':'idle';
     const pipeOffset=g.transition?(1-g.transition.timer/.6)*80:0;
-    if(!g.transition||g.transition.timer>.08)drawMike(c,p.x+p.w/2,p.y+p.h+pipeOffset,p.super?.69:.59,p.super,pose,g.time,p.face);
+    if(!g.transition||g.transition.timer>.08)drawMike(c,p.x+p.w/2,p.y+p.h+pipeOffset,p.super?.69:.59,p.super,pose,g.time,p.face,{phase:p.gaitPhase||0});
     if(p.attack>.1){line(c,[[p.x+p.w/2+p.face*40,p.y+30],[p.x+p.w/2+p.face*72,p.y+28]],'#ffe8a4',7);line(c,[[p.x+p.w/2+p.face*42,p.y+43],[p.x+p.w/2+p.face*62,p.y+46]],'#f7d375',4)}
     if(g.completed&&g.levelId===2){c.font='bold 34px Outfit,sans-serif';c.fillStyle='#fff4cc';c.textAlign='center';c.fillText(g.winTime<1.4?'“MEOW!”':'Prince Xiaboo is close...',g.main.goal+80,300)}c.restore();
     for(const a of g.particles){c.globalAlpha=Math.min(1,a.life*2);rect(c,a.x,a.y,a.size,a.size,a.color,1)}c.globalAlpha=1;c.restore();

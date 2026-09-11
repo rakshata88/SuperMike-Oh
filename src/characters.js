@@ -1,3 +1,4 @@
+import {drawRunningLegs} from './gait.js';
 // Pixel rectangles are deliberately authored for the inspected, transparent atlas.
 // The sheet has uneven rows; slicing it as an equal grid would clip hair and crowns.
 export const ATLAS_URL = new URL('../assets/characters/mike-xiaboo-atlas.png', import.meta.url).href;
@@ -32,19 +33,29 @@ export async function loadCharacters(){
   atlas=image;
 }
 
-export function drawCharacter(c,kind,x,y,scale,pose='idle',time=0,face=1){
+export function drawCharacter(c,kind,x,y,scale,pose='idle',time=0,face=1,gait=null){
   if(!atlas)return false;
   let frame=0;
-  if(pose==='run')frame=1+Math.floor(time*10)%2;
+  if(pose==='run')frame=1+Math.floor(gait&&kind!=='prince'?gait.phase*2:time*10)%2;
   else if(pose==='jump')frame=3;
   else if(pose==='win')frame=5;
   else if(pose==='attack'||pose==='duck'||pose==='sleep')frame=4;
   const [sx,sy,sw,sh,pivot]=FRAMES[kind][frame];
   const unit=kind==='prince'?70/223:kind==='super'?116/353:100/306;
-  const bob=pose==='run'?-Math.abs(Math.sin(time*10*Math.PI))*1.7:pose==='idle'?Math.sin(time*2)*.7:0;
+  const articulated=pose==='run'&&kind!=='prince'&&gait;
+  const bob=articulated?0:pose==='run'?-Math.abs(Math.sin(time*10*Math.PI))*1.7:pose==='idle'?Math.sin(time*2)*.7:0;
   c.save();c.translate(x,y+bob*scale);c.scale(scale*face,scale);
   c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
   if(pose==='duck'&&kind==='super')c.scale(1,.72);
-  c.drawImage(atlas,sx,sy,sw,sh,-pivot*unit,-sh*unit,sw*unit,sh*unit);
+  if(articulated){
+    drawRunningLegs(c,atlas,kind,gait.phase);
+    // Retain the original face, hair, arms and black shirt/sando; animate beneath the waist.
+    const torsoHeight=kind==='super'?206:208,bounce=Math.cos(gait.phase*Math.PI*4)*1.4;
+    c.save();c.translate(0,bounce);c.rotate(Math.sin(gait.phase*Math.PI*2)*.025);
+    // Exclude the old rear shoe that touches the waist's bounding rectangle.
+    c.beginPath();const torsoPoint=(u,v)=>[(u-pivot)*unit,(v-sh)*unit];
+    [[0,0],[sw,0],[sw,torsoHeight],[sw*.3,torsoHeight],[sw*.3,torsoHeight-30],[0,torsoHeight-30]].forEach(([u,v],i)=>i?c.lineTo(...torsoPoint(u,v)):c.moveTo(...torsoPoint(u,v)));c.closePath();c.clip();
+    c.drawImage(atlas,sx,sy,sw,torsoHeight,-pivot*unit,-sh*unit,sw*unit,torsoHeight*unit);c.restore();
+  }else c.drawImage(atlas,sx,sy,sw,sh,-pivot*unit,-sh*unit,sw*unit,sh*unit);
   c.restore();return true;
 }

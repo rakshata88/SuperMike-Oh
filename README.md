@@ -78,3 +78,9 @@ Completing Level 1 unlocks Level 2 and starts its story. Level 2 ends with Princ
 - `scripts/`: dependency-free static server and production builder.
 
 Character inspiration and game concept come from the supplied references. No reference photos are pasted into gameplay, and no existing franchise assets or music are used.
+
+## Running and mobile fullscreen
+
+Normal Mike and Super Mike now use articulated, alternating leg motion with planted feet, knee lift, and a small shoulder/body bounce. The cycle follows actual ground distance, speeds up with sprinting, and does not advance against walls or while a platform carries Mike. The original sprite atlas remains unchanged.
+
+Use the in-game fullscreen button to enter fullscreen. Touch devices request landscape orientation after entering fullscreen, and release the lock on exit. Browsers without fullscreen support use a full-window view; portrait phones show a rotate prompt if automatic rotation is unavailable. The game pauses during display changes, so resume once the view is comfortable.

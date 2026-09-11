@@ -1,3 +1,4 @@
+import {createFullscreenController} from './fullscreen.js';
 import {canSelectLevel,completeLevel,completedLevels} from './progress.js';
 import {Game} from './engine.js';
 import {Renderer,drawMike,drawCat} from './art.js';
@@ -58,7 +59,7 @@ function levels(){previousPanel=game.mode==='paused'?'paused':'menu';if(game.mod
 
 function showGameOver(){clearInput();modal(`<span class="eyebrow">EVERY HERO NEEDS ANOTHER TRY</span><h2>Not yet, Mike!</h2><canvas class="story-cat" width="150" height="125"></canvas><p>Prince Xiaboo still needs you.<br>Shake out those legs. There’s more adventure in you.</p><div class="modal-actions"><button class="primary-button" data-action="play">Try again →</button><button class="secondary-button" data-action="home">Main menu</button></div>`)}
 function showVictory(){if(game.mode!=='won')return;modal(`<span class="eyebrow">LEVEL 2 COMPLETE!</span><canvas class="story-cat" width="150" height="125"></canvas><h2>TO BE CONTINUED...</h2><p>“MEOW!”<br>Prince Xiaboo is close...<br>He must be somewhere inside the castle.</p><div class="results"><div><b>${game.coins}</b><small>MIKE COINS</small></div><div><b>${game.paws}/3</b><small>ROYAL PAWS</small></div><div><b>${game.kills}</b><small>CATS DEFEATED</small></div><div><b>${Math.floor(game.elapsed/60)}:${String(Math.floor(game.elapsed%60)).padStart(2,'0')}</b><small>YOUR TIME</small></div><div><b>${game.score.toLocaleString()}</b><small>TOTAL SCORE</small></div><div><b>+${game.bonus}</b><small>FINISH BONUS</small></div></div><div class="modal-actions"><button class="primary-button" data-action="play">One more adventure →</button><button class="secondary-button" data-action="home">Main menu</button></div>`)}
-const actions={kingdom:()=>kingdomIntro(),select:levelInfo,togglePause,enter:()=>{if(openingReady)showMenu()},home:()=>{if(openingReady)showMenu()},start:intro,play:()=>startPlay(),continue:()=>startPlay(true),how,credits,settings,levels,back,resume,checkpoint:()=>{game.respawn();resume();toast('A fresh start at your checkpoint.')},fullscreen:async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('#game-shell').requestFullscreen()}catch{toast('Fullscreen is unavailable here. Try rotating your device.')}}};
+const actions={kingdom:()=>kingdomIntro(),select:levelInfo,togglePause,enter:()=>{if(openingReady)showMenu()},home:()=>{if(openingReady)showMenu()},start:intro,play:()=>startPlay(),continue:()=>startPlay(true),how,credits,settings,levels,back,resume,checkpoint:()=>{game.respawn();resume();toast('A fresh start at your checkpoint.')},fullscreen:()=>fullscreen.toggle()};
 document.addEventListener('click',e=>{const a=e.target.closest('[data-action]');if(a){if(!openingReady&&a.dataset.action!=='fullscreen')return;audio.unlock();actions[a.dataset.action]?.()}});
 document.addEventListener('change',e=>{if(e.target.dataset.setting){data.settings[e.target.dataset.setting]=e.target.checked;audio.unlock();settingsApply();persist()}});
 $('#sound-button').addEventListener('click',()=>{data.settings.sound=!data.settings.sound;audio.unlock();settingsApply();persist();if(audio.enabled)audio.sfx('coin')});
@@ -68,7 +69,7 @@ let jumpPressed=false,attackPressed=false,touchInput;
 function clearInput(){for(const k in keys)delete keys[k];for(const k in touchKeys)delete touchKeys[k];touchInput?.clear();jumpPressed=false;attackPressed=false;previousTouchRun=false;game.player.vx=0}
 document.addEventListener('keydown',e=>{
   if(e.code==='Enter'&&!e.repeat&&['playing','paused','levelintro'].includes(game.mode)){e.preventDefault();togglePause();return}
-  if(e.code==='Escape'){if(game.mode==='playing'){e.preventDefault();pause()}else if(game.mode==='paused'){e.preventDefault();resume()}return}
+  if(e.code==='Escape'){if(fullscreen.handleEscape()){e.preventDefault();return}if(game.mode==='playing'){e.preventDefault();pause()}else if(game.mode==='paused'){e.preventDefault();resume()}return}
   if(e.code==='Tab'&&screen.querySelector('[role="dialog"]')){const f=[...screen.querySelectorAll('button,input')],i=f.indexOf(document.activeElement);if(e.shiftKey&&i<=0){e.preventDefault();f.at(-1)?.focus()}else if(!e.shiftKey&&i===f.length-1){e.preventDefault();f[0]?.focus()}return}
   if(game.mode!=='playing')return;const key=keyMap[e.code];if(!key)return;if(key==='left'||key==='right')touchMovementUsed=false;e.preventDefault();if(!keys[key]&&!e.repeat){if(key==='jump')jumpPressed=true;if(key==='attack')attackPressed=true}keys[key]=true;
 });
@@ -87,6 +88,7 @@ window.addEventListener('blur',()=>{clearInput();if(game.mode==='playing')pause(
 document.addEventListener('visibilitychange',()=>{clearInput();if(document.hidden&&game.mode==='playing')pause()});
 window.addEventListener('pagehide',()=>{if(['playing','paused'].includes(game.mode)){data.save=game.snapshot();persist()}});
 function gamepad(){const pad=navigator.getGamepads?.()?.find(p=>p?.connected);if(!pad){gamepadPrevious={};return {}}const b=i=>pad.buttons[i]?.pressed;const state={left:pad.axes[0]<-.25||b(14),right:pad.axes[0]>.25||b(15),down:pad.axes[1]>.5||b(13),jump:b(0),run:b(1)||b(5),attack:b(2),pause:b(9)};if(state.jump&&!gamepadPrevious.jump)jumpPressed=true;if(state.attack&&!gamepadPrevious.attack)attackPressed=true;if(state.pause&&!gamepadPrevious.pause){if(game.mode==='playing')pause();else if(game.mode==='paused')resume()}gamepadPrevious=state;return state}
+const fullscreen=createFullscreenController({shell:$('#game-shell'),notice:$('#rotate-notice'),button:$('#session-fullscreen'),onNotice:toast,onChange:()=>{clearInput();if(game.mode==='playing')pause();renderer.resize();game.viewWidth=renderer.w}});
 new ResizeObserver(()=>{renderer.resize();game.viewWidth=renderer.w}).observe(canvas);
 renderer.resize();game.viewWidth=renderer.w;
 let last=performance.now();

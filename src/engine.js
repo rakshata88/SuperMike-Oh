@@ -1,6 +1,7 @@
 import {FLOOR} from './level.js';
 import {createWorld,levels} from './levels.js';
 import {currentPlayerForm} from './forms.js';
+import {advanceGait} from './gait.js';
 export const overlap=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export class Game {
@@ -67,6 +68,7 @@ export class Game {
     if(input.attackPressed)this.attack();
     const platforms=this.level.platforms.filter(s=>!s.broken);
     for(const s of platforms){s.dx=0;s.dy=0;if(s.type==='moving'){const old=s[s.axis];s[s.axis]=s.origin+Math.sin(this.time*s.speed)*s.range;s['d'+s.axis]=s[s.axis]-old;if(p.grounded&&p.support===s){p.x+=s.dx;p.y+=s.dy}}}
+    const strideStart=p.x,wasGrounded=p.grounded;
     p.x+=p.vx*dt;
     for(const s of platforms)if(overlap(p,s)){if(p.vx>0)p.x=s.x-p.w;else if(p.vx<0)p.x=s.x+s.w;p.vx=0}
     p.x=clamp(p.x,0,this.level.width-p.w);
@@ -75,6 +77,7 @@ export class Game {
       if(p.vy>=0&&previousBottom<=s.y+Math.max(8,Math.abs(s.dy||0)+3)){p.y=s.y-p.h;p.vy=0;p.grounded=true;p.support=s}
       else if(p.vy<0){p.y=s.y+s.h;p.vy=0;if(s.type==='mystery'&&!s.used){s.used=true;this.pickup({id:s.id,x:s.x,y:s.y,type:s.reward});this.burst(s.x+24,s.y,'#ffe18b',12)}if(s.type==='breakable'&&p.super){s.broken=true;this.burst(s.x+s.w/2,s.y,'#bf976b',20);this.score+=100}}
     }
+    if(p.grounded&&wasGrounded&&!p.duck)p.gaitPhase=advanceGait(p.gaitPhase||0,p.x-strideStart,p.super);
     if(input.down&&p.grounded)for(const pipe of this.level.pipes)if((pipe.secret||pipe.exit)&&p.x+p.w/2>pipe.x+8&&p.x+p.w/2<pipe.x+pipe.w-8&&Math.abs(p.y+p.h-pipe.y)<8){this.travel(pipe);return}
     const restingPipe=p.grounded&&!dir&&!input.jump&&!input.attack&&!input.run&&this.level.pipes.find(pipe=>(pipe.secret||pipe.exit)&&p.x+p.w/2>pipe.x+8&&p.x+p.w/2<pipe.x+pipe.w-8&&Math.abs(p.y+p.h-pipe.y)<8);
     this.pipeDwell=restingPipe?this.pipeDwell+dt:0;if(this.pipeDwell>.8){this.travel(restingPipe);return}

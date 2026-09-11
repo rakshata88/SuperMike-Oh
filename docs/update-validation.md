@@ -18,3 +18,11 @@ The existing game is extended in place. `src/level.js`, character rendering data
 `node scripts/build.mjs`: production build succeeds.
 
 The browser integration tests use a simulated DOM and canvas context. No connected browser was available in this session, so visual layout, real browser pointer capture, and physical iPhone/Android multi-touch have **not** been verified on a device. Follow-up device checks should include landscape/portrait rotation during held input, safe areas, all four simultaneous actions, pause/resume, and dragging each finger off a control.
+
+## Running and fullscreen follow-up
+
+Added a distance-driven leg rig for Normal/Super Mike using crops from the existing sprite atlas, plus mobile fullscreen/landscape requests, a full-window fallback, and a portrait rotate prompt. Focus and display transitions retain input resets. The character renderer now changes while the atlas, character identities, and loading assets remain intact.
+
+Orientation locking follows the [W3C Screen Orientation specification](https://www.w3.org/TR/screen-orientation/): request fullscreen first, handle rejected/unsupported locks, and release the lock on exit. Automated checks cover planted-foot motion, speed and pause behavior, surface-relative travel, API ordering, unavailable/denied fullscreen or orientation, desktop behavior, and exit cleanup. Physical device visual testing remains outstanding.
+
+Final follow-up verification: 69 tests pass and the production build succeeds. An offline eight-phase render of both forms was inspected to correct texture seams; live browser and physical-device checks remain outstanding.
