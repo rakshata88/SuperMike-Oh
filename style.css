@@ -113,3 +113,41 @@
 @media(max-width:360px){.topbar{padding-left:14px;padding-right:14px}.topbar .nav-link{font-size:9px}.nav-symbol{display:none}.brand-title{font-size:20px}.topbar .brand small{letter-spacing:.8px}.mission-banner{font-size:7px}}
 @media(max-height:500px) and (orientation:landscape){.topbar,.section-heading{display:none}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}.opening-rays,.opening-spark{animation:none!important}}
+/* Handheld controller: six independent, non-overlapping gameplay targets. */
+#game,.touch-controls{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.touch-controls{--pad-size:clamp(65px,8vw,80px);--pad-gap:clamp(18px,2.5vw,25px);left:calc(22px + env(safe-area-inset-left));right:calc(22px + env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));height:calc(var(--pad-size)*2 + var(--pad-gap));align-items:end}
+.touch-controls>div{gap:var(--pad-gap)}
+.touch-controls .touch-movement{display:grid;grid-template-columns:repeat(2,var(--pad-size));grid-template-rows:repeat(2,var(--pad-size));position:absolute;left:0;bottom:0}
+.touch-controls .touch-movement [data-key="down"]{grid-column:1 / 3;grid-row:1;justify-self:center}
+.touch-controls .touch-movement [data-key="left"]{grid-column:1;grid-row:2}
+.touch-controls .touch-movement [data-key="right"]{grid-column:2;grid-row:2}
+.touch-controls .touch-movement small{font-size:8px;font-weight:700;letter-spacing:1px}
+.touch-controls button[data-key]{width:var(--pad-size);height:var(--pad-size);min-width:0;min-height:0;padding:0;border:2px solid #edf4df70;border-radius:21px;background:#182d3ee6;color:#fff9e9;font-size:32px;opacity:.78;box-shadow:0 5px 0 #08132270,inset 0 2px 2px #ffffff30;transition:transform 70ms,opacity 70ms;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px}
+.touch-controls button[data-key].is-held{transform:translateY(2px) scale(.96);opacity:.94;background:#101d2f;color:#fff7da;box-shadow:inset 0 3px 7px #0008,0 1px 0 #ffffff40}
+.touch-controls>div.touch-actions{position:absolute;right:0;bottom:0;display:grid;grid-template-columns:repeat(2,var(--pad-size));grid-template-rows:repeat(2,var(--pad-size));gap:var(--pad-gap)}
+.touch-controls .touch-actions button{border-radius:50%;font-size:26px}
+.touch-controls .touch-actions small{font-size:8px;font-weight:700;letter-spacing:1px}
+.touch-controls [data-key="attack"]{grid-column:1 / 3;grid-row:1;justify-self:center;border-color:#cdbafb;background:#473c69}
+.touch-controls [data-key="run"]{grid-column:1;grid-row:2;border-color:#a8ddec;background:#285468}
+.touch-controls [data-key="jump"]{grid-column:2;grid-row:2;border-color:#ffe2a0;background:#805232}
+.touch-controls .touch-system{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);display:flex;gap:14px}
+.touch-controls .touch-system button{width:58px;height:28px;min-width:0;min-height:0;border-radius:14px;border:1px solid #dbe6d366;background:#172c3acf;color:#f1efda;font-size:9px;font-weight:800;letter-spacing:1px;box-shadow:0 3px 0 #06132255}
+.touch-system button:active{transform:translateY(2px);background:#101d2f}
+.touch-controls:has(~*){z-index:4}
+@media(any-pointer:coarse){.touch-controls{display:flex}}
+@media(any-pointer:coarse) and (orientation:portrait){
+  .game-shell.is-session{padding-bottom:calc(235px + env(safe-area-inset-bottom))}
+  .game-shell.is-session .screen{bottom:calc(235px + env(safe-area-inset-bottom))}
+  .touch-controls{--pad-size:clamp(55px,15vw,72px);--pad-gap:18px;left:calc(14px + env(safe-area-inset-left));right:calc(14px + env(safe-area-inset-right));bottom:calc(52px + env(safe-area-inset-bottom))}
+  .touch-controls .touch-system{bottom:-38px}
+}
+@media(any-pointer:coarse) and (orientation:landscape){
+  .game-shell.is-session{position:fixed;inset:0;width:100%;height:100dvh;z-index:20;aspect-ratio:auto;padding:0;border-radius:0}
+  .game-shell.is-session #game{height:100%;width:100%;aspect-ratio:auto}
+  .game-shell.is-session .screen{inset:0}
+  .game-shell.is-session .hud{top:calc(12px + env(safe-area-inset-top));left:calc(22px + env(safe-area-inset-left));right:calc(22px + env(safe-area-inset-right))}
+  .game-shell.is-session:has(.modal) .modal-shade{padding-bottom:70px}
+}
+
+.game-shell.is-session:not(:has(.modal)){touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.game-shell:has(.modal) .touch-movement,.game-shell:has(.modal) .touch-actions{visibility:hidden}

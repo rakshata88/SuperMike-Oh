@@ -24,11 +24,15 @@
   <main>
     <div class="section-heading"><div class="mission-banner"><span class="mission-star" aria-hidden="true">★</span><span>A SMALL HERO. A BIG ADVENTURE.</span></div><div class="chapter-banner"><span class="chapter-caption">LET’S-A-GO, MIKE!</span><span class="version">WORLD <b>01</b></span></div></div>
     <section class="game-shell" id="game-shell" aria-label="Super Mike-oh game">
-      <canvas id="game" width="1280" height="720" tabindex="0" aria-label="Platform game. Use arrow keys to move, Space to jump, Shift to sprint, S to enter pipes, X to punch, Escape to pause."></canvas>
+      <canvas id="game" width="1280" height="720" tabindex="0" aria-label="Platform game. Use arrow keys to move, Space to jump, Shift to sprint, stand still on marked pipes to enter, F or X to attack, Enter or Escape to pause."></canvas>
       <div class="hud" id="hud" hidden><div class="hud-panel"><span id="hud-lives">♥ ♥ ♥</span><span class="hud-separator"></span><span class="coin-icon">M</span><b id="hud-coins">00</b><span class="paw-mini">✿</span><b id="hud-paws">0/3</b></div><div class="hud-location"><small id="hud-zone">GREEN PAW MEADOWS</small><b id="hud-score">000000</b></div><div class="hud-panel"><span id="hud-power">NORMAL MIKE</span><button id="pause-button" aria-label="Pause game">Ⅱ</button></div></div>
       <div id="screen" class="screen"></div>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
-      <div class="touch-controls" id="touch-controls" hidden><div><button data-key="left" aria-label="Move left">◀</button><button data-key="right" aria-label="Move right">▶</button><button data-key="down" aria-label="Enter pipe or duck">▼</button></div><div><button data-key="attack" aria-label="Power punch">X</button><button data-key="run" aria-label="Toggle sprint" aria-pressed="false">RUN</button><button class="touch-jump" data-key="jump" aria-label="Jump">↑</button></div></div>
+      <div class="touch-controls" id="touch-controls" hidden aria-label="Handheld controller">
+        <div class="touch-movement"><button data-key="down" aria-label="Down: enter secret pipe or duck"><b>↓</b><small>PIPE</small></button><button data-key="left" aria-label="Move left">←</button><button data-key="right" aria-label="Move right">→</button></div>
+        <div class="touch-system"><button data-action="select" aria-label="Select: level information">SELECT</button><button data-action="togglePause" aria-label="Start: pause or resume">START</button></div>
+        <div class="touch-actions"><button data-key="attack" aria-label="C: Attack"><b>C</b><small>ATTACK</small></button><button data-key="run" aria-label="B: Hold to run" aria-pressed="false"><b>B</b><small>RUN</small></button><button data-key="jump" aria-label="A: Jump"><b>A</b><small>JUMP</small></button></div>
+      </div>
       <div class="game-bottom" id="game-bottom"><span><i></i> YOUR ADVENTURE STARTS HERE</span><span>MADE FOR A LITTLE ESCAPE <span>✦</span></span></div>
     </section>
     <div class="under-game"><span><span class="status-dot"></span> Free to play. Big on heart.</span><div><span>Keyboard · Touch · Controller</span><button data-action="fullscreen" class="expand-button" title="Fullscreen">⛶ <span>Fullscreen</span></button></div></div>
