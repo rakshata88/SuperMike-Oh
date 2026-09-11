@@ -113,12 +113,11 @@
 @media(max-width:360px){.topbar{padding-left:14px;padding-right:14px}.topbar .nav-link{font-size:9px}.nav-symbol{display:none}.brand-title{font-size:20px}.topbar .brand small{letter-spacing:.8px}.mission-banner{font-size:7px}}
 @media(max-height:500px) and (orientation:landscape){.topbar,.section-heading{display:none}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}.opening-rays,.opening-spark{animation:none!important}}
-/* Handheld controller: six independent, non-overlapping gameplay targets. */
+/* Handheld controller: five independent, non-overlapping gameplay targets. */
 #game,.touch-controls{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .touch-controls{--pad-size:clamp(65px,8vw,80px);--pad-gap:clamp(18px,2.5vw,25px);left:calc(22px + env(safe-area-inset-left));right:calc(22px + env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));height:calc(var(--pad-size)*2 + var(--pad-gap));align-items:end}
 .touch-controls>div{gap:var(--pad-gap)}
 .touch-controls .touch-movement{display:grid;grid-template-columns:repeat(2,var(--pad-size));grid-template-rows:repeat(2,var(--pad-size));position:absolute;left:0;bottom:0}
-.touch-controls .touch-movement [data-key="down"]{grid-column:1 / 3;grid-row:1;justify-self:center}
 .touch-controls .touch-movement [data-key="left"]{grid-column:1;grid-row:2}
 .touch-controls .touch-movement [data-key="right"]{grid-column:2;grid-row:2}
 .touch-controls .touch-movement small{font-size:8px;font-weight:700;letter-spacing:1px}
@@ -158,3 +157,7 @@
 .game-shell.is-fullscreen:not(.is-session) #game{width:100%;height:100%;aspect-ratio:auto}
 .rotate-notice{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;background:#17382ff5;color:#fff5d7;touch-action:manipulation}
 .rotate-notice>span{font-size:80px;line-height:1}.rotate-notice h2{font:800 28px Outfit,sans-serif}.rotate-notice p{font-size:14px;line-height:1.8;max-width:320px}
+
+/* Five-button mobile layout: move, jump, run, attack. */
+.touch-controls .touch-movement{grid-template-rows:var(--pad-size);align-content:end}
+.touch-controls .touch-movement [data-key="left"],.touch-controls .touch-movement [data-key="right"]{grid-row:1}

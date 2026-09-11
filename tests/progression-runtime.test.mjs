@@ -32,8 +32,12 @@ test('chapter transitions, persisted unlocks, retry chapter, and interrupted tou
     click('select');assert.match(screen.innerHTML,/The Cat Kingdom/);click('togglePause');assert.equal(activeGame.mode,'playing');
     // A reload-style Continue must retry the same chapter after game over.
     click('home');click('continue');assert.equal(activeGame.levelId,2);activeGame.lives=1;activeGame.damage(true);for(let i=0;i<40;i++)activeGame.step(.03);assert.match(screen.innerHTML,/Not yet, Mike/);click('play');assert.equal(activeGame.levelId,2);
-    Object.assign(activeGame.player,{x:activeGame.main.goal,y:531,grounded:true});activeGame.step(.01);fireTimer(3200);assert.match(screen.innerHTML,/LEVEL 2 COMPLETE!/);assert.match(screen.innerHTML,/TO BE CONTINUED/);assert.deepEqual(saved.completedLevels,[1,2]);
-    click('home');click('levels');assert.equal((screen.innerHTML.match(/Completed/g)||[]).length,2);assert.match(screen.innerHTML,/03 · Coming Soon/);
+    Object.assign(activeGame.player,{x:activeGame.main.goal,y:531,grounded:true});activeGame.step(.01);assert.match(screen.innerHTML,/LEVEL 2 COMPLETE!/);assert.match(screen.innerHTML,/Prince Xiaboo is close/);assert.deepEqual(saved.completedLevels,[1,2]);assert.equal(saved.save.levelId,3);
+    fireTimer(3200);assert.match(screen.innerHTML,/THE DOG GUARD TERRITORY/);fireTimer(6500);assert.equal(activeGame.levelId,3);assert.equal(activeGame.mode,'playing');
+    click('home');click('levels');assert.equal((screen.innerHTML.match(/Completed/g)||[]).length,2);assert.match(screen.innerHTML,/03 · The Dog Guard Territory/);assert.match(screen.innerHTML,/04 · Coming Soon/);
+    click('territory');click('togglePause');assert.equal(activeGame.levelId,3);assert.equal(activeGame.mode,'playing');
+    activeGame.main.gateOpen=true;activeGame.main.boss.state='defeated';Object.assign(activeGame.player,{x:activeGame.main.goal,y:531,grounded:true});activeGame.step(.01);assert.deepEqual(saved.completedLevels,[1,2,3]);assert.equal(saved.save,null);fireTimer(10000);assert.match(screen.innerHTML,/LEVEL 3 COMPLETE!/);assert.match(screen.innerHTML,/LEVEL 4 — COMING SOON/);
+    click('home');click('levels');assert.equal((screen.innerHTML.match(/Completed/g)||[]).length,3);
   }finally{Game.prototype.reset=originalReset;globalThis.setTimeout=nativeTimeout;globalThis.clearTimeout=nativeClear}
 });
 test('Cat Kingdom, bonus vault, guard attacks, bell glow, acorns and ending render without invalid coordinates',()=>{

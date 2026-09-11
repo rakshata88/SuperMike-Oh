@@ -1,6 +1,6 @@
 # SUPER MIKE-OH
 
-A complete browser platform game inspired by the supplied Mike and Prince Xiaboo character brief. The original **Green Paw Meadows** chapter now continues into **Level 2 — The Cat Kingdom**, with a longer route, a bonus vault, a castle-gate ending, and locally saved level unlocks.
+A complete browser platform game inspired by the supplied Mike and Prince Xiaboo character brief. The original **Green Paw Meadows** chapter now continues into **Level 2 — The Cat Kingdom**, and **Level 3 — The Dog Guard Territory**, with new dog enemies, Fire Mike, Captain Barko, and locally saved level unlocks.
 
 ## Run locally
 
@@ -38,7 +38,7 @@ The game runs entirely in the browser. Progress is saved locally on the player's
 | Attack (all forms) | F / X | X |
 | Pause / resume | Enter / Escape | Start |
 
-Touch controls appear on touchscreen devices. Landscape play fills the screen with a handheld layout: **← / →** for movement, **A = Jump**, **hold B = Run**, and **C = Attack**. **↓ = Enter secret pipe / duck**, positioned above Left/Right with its own separate touch area. Each finger is tracked independently, so movement, running, jumping, and attacking can be combined. Releasing a button stops its input; focus loss, pause, orientation changes, death, and travel clear controls. **START** pauses/resumes and **SELECT** displays level information. Press ↓ while standing on a marked pipe to enter immediately, or stand still for 0.8 seconds; keyboard Down/S and gamepad Down still work. Small phones in portrait use a separate controller area. Sound starts muted; enable it using the music button or Settings.
+Touch controls appear on touchscreen devices. Landscape play fills the screen with a handheld layout: **← / →** for movement, **A = Jump**, **hold B = Run**, and **C = Attack**. Each finger is tracked independently, so movement, running, jumping, and attacking can be combined. Releasing a button stops its input; focus loss, pause, orientation changes, death, and travel clear controls. **START** pauses/resumes and **SELECT** displays level information. Stand still on a marked pipe for 0.8 seconds to enter; keyboard Down/S and gamepad Down still work. There is no mobile Up or Down button. Approach the Level 3 dog house from the left and pause at its door to enter. Small phones in portrait use a separate controller area. Sound starts muted; enable it using the music button or Settings.
 
 After deployment, open the Vercel HTTPS link on your phone; no installation is needed. The computer's `localhost:3000` link is for that computer only. Saves stay in each device's browser. Touch input has automated coverage, but real iPhone/Android device testing is still recommended before sharing widely.
 
@@ -52,16 +52,21 @@ After deployment, open the Vercel HTTPS link on your phone; no installation is n
 - Loading, main menu, chapter stories, instructions, settings, locked/unlocked/completed level selection, pause, game over, and completion screens with score and bonuses.
 - A 25,200-unit Cat Kingdom course with brick and mystery blocks, platform-patrolling Fast Cats, two-hit Guard Cats, warning acorns, a midpoint checkpoint, and a golden underground bonus vault.
 - The Super Cat Bell: 12 seconds of slightly faster movement, higher jumps, stronger attacks, and a golden glow, while preserving Normal/Super Mike.
+- A 27,600-unit Dog Guard territory: six dog types, returning cats, moats, falling/suspended platforms, a jump-only watch tower, and a coin-filled secret dog house.
+- Fire Mike from orange flame mystery blocks: C fires left/right, limited to one shot per 0.4 seconds and three active fireballs. Damage downgrades Fire → Super → Normal → life loss.
+- Captain Barko: five health, charge/barrage/slam patterns, clear warnings and dizzy attack windows; harmless defeat opens the inner-castle gate.
 - Device-local checkpoint, score, collection, settings, and completion persistence.
 - Responsive layout, keyboard and touch input, standard Gamepad API support, fullscreen, and automatic pause on focus loss.
 
-Completing Level 1 unlocks Level 2 and starts its story. Level 2 ends with Prince Xiaboo heard inside the castle and **TO BE CONTINUED...**; Level 3 is Coming Soon. Existing version-one saves still load and previous completions unlock Level 2. Browser tabs cannot generally close themselves, so the web edition uses Main Menu instead of a desktop Quit action.
+Completing Level 1 unlocks Level 2 and starts its story. Completing Level 2 unlocks Level 3 and introduces the Dog Guard. After Captain Barko is outwitted, Level 3 ends with a glimpse of Prince Xiaboo and an unknown shadow inside the castle; **Level 4 — Coming Soon** remains locked. Existing version-one saves still load and previous completions unlock Level 2. Browser tabs cannot generally close themselves, so the web edition uses Main Menu instead of a desktop Quit action.
 
 ## Project map
 
 - `src/engine.js`: physics, collisions, game rules, checkpoint/save data.
 - `src/level.js`: preserved hand-authored meadow and cavern layout.
-- `src/levels.js`, `src/level2.js`: world registry and separate Cat Kingdom/bonus vault configuration.
+- `src/levels.js`, `src/level2.js`, `src/level3.js`: world registry and separate chapter/bonus-room configurations.
+- `src/dogs.js`: Dog Guard behavior, telegraphed boss states, projectiles, and rolling barrels.
+- `src/dog-art.js`: code-drawn cartoon dogs, territory scenery, Fire Mike accessories, and ending animation.
 - `src/forms.js`: per-form attack definitions.
 - `src/progress.js`: persistent unlock rules and legacy completion migration.
 - `src/touch.js`: independent pointer input and cancellation.
