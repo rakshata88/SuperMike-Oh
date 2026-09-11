@@ -1,6 +1,6 @@
 # SUPER MIKE-OH
 
-A complete browser platform game inspired by the supplied Mike and Prince Xiaboo character brief. The original **Green Paw Meadows** chapter now continues into **Level 2 — The Cat Kingdom**, and **Level 3 — The Dog Guard Territory**, with new dog enemies, Fire Mike, Captain Barko, and locally saved level unlocks.
+A complete browser platform game inspired by the supplied Mike and Prince Xiaboo character brief. Green Paw Meadows continues through **The Cat Kingdom**, **The Dog Guard Territory**, and **Level 4 — The Shadow Castle**, with four playable chapters and locally saved unlocks.
 
 ## Run locally
 
@@ -55,18 +55,24 @@ After deployment, open the Vercel HTTPS link on your phone; no installation is n
 - A 27,600-unit Dog Guard territory: six dog types, returning cats, moats, falling/suspended platforms, a jump-only watch tower, and a coin-filled secret dog house.
 - Fire Mike from orange flame mystery blocks: C fires left/right, limited to one shot per 0.4 seconds and three active fireballs. Damage downgrades Fire → Super → Normal → life loss.
 - Captain Barko: five health, charge/barrage/slam patterns, clear warnings and dizzy attack windows; harmless defeat opens the inner-castle gate.
+- A 30,600-unit Shadow Castle with six new enemies, swinging chandeliers, collapsing floors, moving library shelves, wide clock gears, a royal map, secret archives, and two checkpoints.
+- Thunder Mike: an 18-second form with a short electric burst, a 0.65-second cooldown, and optional bonus lift activation. Fire Mike remains available; either powered form downgrades to Super Mike on damage.
+- Lord Whiskeron: seven health, a dialogue introduction, warned orb/summon/teleport/wave attacks, and a nonlethal escape sequence that sets up the next chapter.
 - Device-local checkpoint, score, collection, settings, and completion persistence.
 - Responsive layout, keyboard and touch input, standard Gamepad API support, fullscreen, and automatic pause on focus loss.
 
-Completing Level 1 unlocks Level 2 and starts its story. Completing Level 2 unlocks Level 3 and introduces the Dog Guard. After Captain Barko is outwitted, Level 3 ends with a glimpse of Prince Xiaboo and an unknown shadow inside the castle; **Level 4 — Coming Soon** remains locked. Existing version-one saves still load and previous completions unlock Level 2. Browser tabs cannot generally close themselves, so the web edition uses Main Menu instead of a desktop Quit action.
+Each completed chapter unlocks the next. After Captain Barko is outwitted, Level 3 reveals a glimpse of Prince Xiaboo and unlocks **Level 4 — The Shadow Castle**. Mike enters through a hidden passage, discovers the Prince's location, and faces Lord Whiskeron. The almost-rescue ends with **Level 5 — Coming Soon**, which stays locked. Existing version-one saves still load, including previously completed chapters. Browser tabs cannot generally close themselves, so the web edition uses Main Menu instead of a desktop Quit action.
+
+In the castle, attack the sparkling library shelf with C, then pause at its doorway to enter the Royal Archives. Thunder Mike powers the blue bonus-lift switch with C. A or C advances Whiskeron's introductory dialogue. The library and clock tower use the same five mobile gameplay buttons. See [Level 4 validation](docs/level4-validation.md) for mechanics and verification details.
 
 ## Project map
 
 - `src/engine.js`: physics, collisions, game rules, checkpoint/save data.
 - `src/level.js`: preserved hand-authored meadow and cavern layout.
-- `src/levels.js`, `src/level2.js`, `src/level3.js`: world registry and separate chapter/bonus-room configurations.
+- `src/levels.js`, `src/level2.js`, `src/level3.js`, `src/level4.js`: world registry and separate chapter/bonus-room configurations.
 - `src/dogs.js`: Dog Guard behavior, telegraphed boss states, projectiles, and rolling barrels.
 - `src/dog-art.js`: code-drawn cartoon dogs, territory scenery, Fire Mike accessories, and ending animation.
+- `src/shadow.js`, `src/shadow-art.js`: castle enemies, mechanisms, Whiskeron encounter, Thunder effects, castle rendering, and cinematic scenes.
 - `src/forms.js`: per-form attack definitions.
 - `src/progress.js`: persistent unlock rules and legacy completion migration.
 - `src/touch.js`: independent pointer input and cancellation.

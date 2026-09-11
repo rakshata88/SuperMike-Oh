@@ -20,9 +20,9 @@ test('third chapter adds all dogs, cats, bonus room, three paws and forgiving ga
   for(const type of ['life','fire'])assert.ok(c.items.some(i=>i.type===type));assert.ok(c.platforms.some(p=>p.hidden));
   assert.equal(createWorld(1).width,19800);assert.equal(createWorld(2).width,25200);
 });
-test('saved Level 2 completion unlocks only Level 3; three completions survive reload',()=>{
-  const d={completed:true};assert.equal(canSelectLevel(d,3),false);completeLevel(d,2);assert.equal(canSelectLevel(JSON.parse(JSON.stringify(d)),3),true);completeLevel(d,3);assert.deepEqual(d.completedLevels,[1,2,3]);assert.equal(canSelectLevel(d,4),false);
-  const g=game();g.nextLevel();assert.equal(g.levelId,3);
+test('saved Level 2 completion unlocks Level 3; three completions unlock the castle',()=>{
+  const d={completed:true};assert.equal(canSelectLevel(d,3),false);completeLevel(d,2);assert.equal(canSelectLevel(JSON.parse(JSON.stringify(d)),3),true);completeLevel(d,3);assert.deepEqual(d.completedLevels,[1,2,3]);assert.equal(canSelectLevel(d,4),true);assert.equal(canSelectLevel(d,5),false);
+  const g=game();g.nextLevel();assert.equal(g.levelId,4);
 });
 test('Fire Mike comes from a mystery block, fires both ways, rate limits, and downgrades in stages',()=>{
   const g=game(),b=g.main.platforms.find(p=>p.reward==='fire');place(g,b.x+5,b.y+b.h+1);g.player.vy=-300;g.step(.02,{jump:true});assert.equal(g.player.form,'fire');assert.equal(b.used,true);g.transform=0;
