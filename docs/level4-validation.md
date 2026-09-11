@@ -18,12 +18,12 @@ The fourth chapter extends the existing world registry, physics/collisions, play
 - Seven health, with separate orb, bat summon, teleport, and ground-wave phases. Telegraphs last roughly a second. Vulnerability lasts 2.9–3 seconds, with one second of invulnerability after each successful hit. C, fireballs, electricity, and appropriate stomps can damage him.
 - Summons are capped at three living bats. Teleport destinations are chosen away from Mike; if Mike enters the marked destination, it is relocated and telegraphed again. At three health or lower, speeds rise by 15% and the pattern omits further summons.
 - Defeat is nonlethal: the staff fades, the barrier disappears, and Mike approaches Xiaboo. A hidden lift carries the Prince upward, Whiskeron escapes, and Mike retreats as the room shakes. Both characters appear in the escape transport; the Prince no longer remains duplicated on the tower lift.
-- The 14-second escape scene precedes completion. A save made after defeating Whiskeron replays this escape instead of requiring another boss fight. Completion awards the bonus once and shows **LEVEL 5 — COMING SOON**.
+- The 14-second escape scene precedes completion. A save made after defeating Whiskeron replays this escape instead of requiring another boss fight. Completion awards the bonus once and unlocks **Level 5 — The Great Escape** and starts the convoy chase.
 
 ## Validation
 
-- `npm.cmd test`: 105 passing tests. The 20 new tests cover forms, damage, multi-target range/cooldown, mechanisms, enemy behavior, projectiles, archives, two checkpoints, gear support, real-physics ascent, dialogue, boss phases, summon caps, teleport safety, escape saves, and rendering at desktop/phone dimensions.
-- Existing progression runtime coverage now includes Level 3 → Level 4, Continue/retry in Level 4, completion persistence, and the locked Level 5 card.
+- At the Level 4 milestone, `npm.cmd test` passed 105 tests. See [Level 5 validation](level5-validation.md) for current totals. The 20 new tests cover forms, damage, multi-target range/cooldown, mechanisms, enemy behavior, projectiles, archives, two checkpoints, gear support, real-physics ascent, dialogue, boss phases, summon caps, teleport safety, escape saves, and rendering at desktop/phone dimensions.
+- Existing progression runtime coverage now includes Level 3 → Level 4, Continue/retry in Level 4, completion persistence, and the Level 5 unlock.
 - Headless Chrome screenshots inspected for the castle halls, library, archives, clock tower, boss/barrier, and escape sequence. Fixtures and images remain local under ignored `.qa/`.
 - Production output is generated with `npm.cmd run build` into `dist/`.
 - Mobile gameplay buttons remain exactly Left, Right, A/Jump, B/Run, and C/Attack. Multitouch regressions pass. Physical iPhone/Android playtesting has not been performed.

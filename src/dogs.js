@@ -1,3 +1,4 @@
+import {hitChase} from './chase.js';
 import {hitShadow} from './shadow.js';
 import {FLOOR} from './level.js';
 const intersects=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
@@ -11,7 +12,7 @@ export function hitDog(g,e,kind='punch',projectile=null){
     return true;
   }
   const front=projectile?projectile.vx*e.face<0:(g.player.x+g.player.w/2-(e.x+e.w/2))*e.face>0;
-  if(e.type==='shield'&&kind!=='stomp'&&front){e.blocked=.3;g.burst(e.x+e.w/2,e.y+20,'#aee7ff',5);g.emit('toast','CLANG! Try a stomp or attack from behind.');return false}
+  if(e.type==='shield'&&kind!=='stomp'&&kind!=='dash'&&front){e.blocked=.3;g.burst(e.x+e.w/2,e.y+20,'#aee7ff',5);g.emit('toast','CLANG! Try a stomp or attack from behind.');return false}
   g.defeat(e);return true;
 }
 function moveDog(e,dt,platforms){
@@ -78,7 +79,7 @@ export function updateProjectiles(g,dt,platforms){
     for(const s of platforms)if(intersects(a,s)){if(a.bounce&&a.vy>0&&bottom<=s.y+10){a.y=s.y-a.h;a.vy=-260}else a.life=0}
     if(a.life<=0)continue;
     if(a.type==='fireball'){
-      for(const e of g.level.enemies)if(e.alive&&!e.hidden&&e.state!=='defeated'&&intersects(a,e)){if(e.faction==='shadow')hitShadow(g,e,'fireball',a);else if(e.faction==='dog')hitDog(g,e,'fireball',a);else{e.hp--;if(e.hp<=0)g.defeat(e)}a.life=0;break}
+      for(const e of g.level.enemies)if(e.alive&&!e.hidden&&e.state!=='defeated'&&intersects(a,e)){if(e.faction==='chase')hitChase(g,e,'fireball');else if(e.faction==='shadow')hitShadow(g,e,'fireball',a);else if(e.faction==='dog')hitDog(g,e,'fireball',a);else{e.hp--;if(e.hp<=0)g.defeat(e)}a.life=0;break}
       for(const h of g.level.hazards)if(h.type==='barrel'&&h.phase==='rolling'&&intersects(a,h)){h.phase='cooldown';h.timer=3;a.life=0;g.burst(h.x,h.y,'#d7ab6c',12)}
     }else if(intersects(a,g.player)){g.damage();a.life=0}
   }

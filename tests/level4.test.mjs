@@ -22,9 +22,9 @@ test('castle extends four worlds, has two safe checkpoints, all enemies, hazards
   for(const type of ['life','fire','relic'])assert.ok(a.items.some(i=>i.type===type));assert.ok(a.enemies.some(e=>e.type==='ghost'&&e.harmless));
   const ground=l.platforms.filter(s=>s.type==='castleStone'&&s.y===590&&s.h>50);for(let i=1;i<ground.length;i++)assert.ok(ground[i].x-ground[i-1].x-ground[i-1].w<=155);
 });
-test('Level 3 completion unlocks Level 4, legacy saves survive, and Level 5 stays unavailable',()=>{
-  const data={completed:true};assert.equal(canSelectLevel(data,4),false);completeLevel(data,2);completeLevel(data,3);assert.equal(canSelectLevel(JSON.parse(JSON.stringify(data)),4),true);completeLevel(data,4);assert.deepEqual(completedLevels(data),[1,2,3,4]);assert.equal(canSelectLevel(data,5),false);
-  const g=game();g.nextLevel();assert.equal(g.levelId,4);
+test('Level 3 completion unlocks Level 4, legacy saves survive, and completing Level 4 unlocks the chase',()=>{
+  const data={completed:true};assert.equal(canSelectLevel(data,4),false);completeLevel(data,2);completeLevel(data,3);assert.equal(canSelectLevel(JSON.parse(JSON.stringify(data)),4),true);completeLevel(data,4);assert.deepEqual(completedLevels(data),[1,2,3,4]);assert.equal(canSelectLevel(data,5),true);
+  const g=game();g.nextLevel();assert.equal(g.levelId,5);
 });
 test('Thunder mystery block grants a temporary recognizable Super form and restores Fire on expiry',()=>{
   const g=game(),b=g.main.platforms.find(s=>s.reward==='thunder');g.firePower();g.transform=0;place(g,b.x+5,b.y+b.h+1);g.player.vy=-300;g.step(.02,{jump:true});assert.equal(g.player.form,'thunder');assert.equal(g.player.super,true);assert.equal(g.player.h,78);assert.equal(b.used,true);

@@ -1,6 +1,6 @@
 # SUPER MIKE-OH
 
-A complete browser platform game inspired by the supplied Mike and Prince Xiaboo character brief. Green Paw Meadows continues through **The Cat Kingdom**, **The Dog Guard Territory**, and **Level 4 — The Shadow Castle**, with four playable chapters and locally saved unlocks.
+A complete browser platform game inspired by the supplied Mike and Prince Xiaboo character brief. Green Paw Meadows continues through **The Cat Kingdom**, **The Dog Guard Territory**, **The Shadow Castle**, and **Level 5 — The Great Escape**, with five playable chapters and locally saved unlocks.
 
 ## Run locally
 
@@ -58,21 +58,26 @@ After deployment, open the Vercel HTTPS link on your phone; no installation is n
 - A 30,600-unit Shadow Castle with six new enemies, swinging chandeliers, collapsing floors, moving library shelves, wide clock gears, a royal map, secret archives, and two checkpoints.
 - Thunder Mike: an 18-second form with a short electric burst, a 0.65-second cooldown, and optional bonus lift activation. Fire Mike remains available; either powered form downgrades to Super Mike on damage.
 - Lord Whiskeron: seven health, a dialogue introduction, warned orb/summon/teleport/wave attacks, and a nonlethal escape sequence that sets up the next chapter.
+- A 34,600-unit Great Escape: bright forest, river platforms, eleven train cars, mountain bridges, and an airship launch site. Nine new enemies, two bonus rooms, two checkpoints, and saved raccoon coin recovery.
+- Dash Mike: 20 seconds of faster B running, a short full-speed C attack with recovery, weak-crate breaking, and wind effects on the original Mike sprite. Fire and Thunder remain available.
+- Commander Howl: eight health, warned dash/wind/ball/aerial phases, a nonlethal defeat, and a final airship chase that reveals the Sky Kingdom.
 - Device-local checkpoint, score, collection, settings, and completion persistence.
 - Responsive layout, keyboard and touch input, standard Gamepad API support, fullscreen, and automatic pause on focus loss.
 
-Each completed chapter unlocks the next. After Captain Barko is outwitted, Level 3 reveals a glimpse of Prince Xiaboo and unlocks **Level 4 — The Shadow Castle**. Mike enters through a hidden passage, discovers the Prince's location, and faces Lord Whiskeron. The almost-rescue ends with **Level 5 — Coming Soon**, which stays locked. Existing version-one saves still load, including previously completed chapters. Browser tabs cannot generally close themselves, so the web edition uses Main Menu instead of a desktop Quit action.
+Each completed chapter unlocks the next. After Captain Barko is outwitted, Level 3 reveals a glimpse of Prince Xiaboo and unlocks **Level 4 — The Shadow Castle**. Mike enters through a hidden passage, discovers the Prince's location, and faces Lord Whiskeron. The almost-rescue unlocks **Level 5 — The Great Escape**. Mike chases the convoy across the forest, river, train and mountains, then discovers that the airship is heading for the **Sky Kingdom**. **Level 6 — Coming Soon** remains locked. Existing version-one saves still load, including previously completed chapters. Browser tabs cannot generally close themselves, so the web edition uses Main Menu instead of a desktop Quit action.
 
-In the castle, attack the sparkling library shelf with C, then pause at its doorway to enter the Royal Archives. Thunder Mike powers the blue bonus-lift switch with C. A or C advances Whiskeron's introductory dialogue. The library and clock tower use the same five mobile gameplay buttons. See [Level 4 validation](docs/level4-validation.md) for mechanics and verification details.
+In the castle, attack the sparkling library shelf with C, then pause at its doorway to enter the Royal Archives. Thunder Mike powers the blue bonus-lift switch with C. A or C advances Whiskeron's introductory dialogue. The library and clock tower use the same five mobile gameplay buttons. See [Level 4 validation](docs/level4-validation.md) for mechanics and verification details. In the chase, use A to cross the river and train gaps, follow the lower car through the tunnel, and break the sparkling cargo crate with C before pausing at its doorway. Hold B to build Dash speed, then press C for a short dash attack. See [Level 5 validation](docs/level5-validation.md) for the new journey and its checks.
 
 ## Project map
 
 - `src/engine.js`: physics, collisions, game rules, checkpoint/save data.
 - `src/level.js`: preserved hand-authored meadow and cavern layout.
-- `src/levels.js`, `src/level2.js`, `src/level3.js`, `src/level4.js`: world registry and separate chapter/bonus-room configurations.
+- `src/levels.js`, `src/level2.js`, `src/level3.js`, `src/level4.js`, `src/level5.js`: world registry and separate chapter/bonus-room configurations.
 - `src/dogs.js`: Dog Guard behavior, telegraphed boss states, projectiles, and rolling barrels.
 - `src/dog-art.js`: code-drawn cartoon dogs, territory scenery, Fire Mike accessories, and ending animation.
 - `src/shadow.js`, `src/shadow-art.js`: castle enemies, mechanisms, Whiskeron encounter, Thunder effects, castle rendering, and cinematic scenes.
+- `src/chase.js`, `src/chase-art.js`: escape encounters, saved loot, Commander Howl, five environments, and airship story scenes.
+- `src/behaviors.js`: reusable ground movement, state timers, charge, projectile and boss phase components.
 - `src/forms.js`: per-form attack definitions.
 - `src/progress.js`: persistent unlock rules and legacy completion migration.
 - `src/touch.js`: independent pointer input and cancellation.
