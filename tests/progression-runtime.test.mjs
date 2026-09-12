@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import {Game} from '../src/engine.js';
 import {Renderer} from '../src/art.js';
 function context(){return new Proxy({}, {get(t,k){if(k in t)return t[k];if(k==='createLinearGradient'||k==='createRadialGradient')return ()=>({addColorStop(){}});return (...args)=>{for(const n of args)if(typeof n==='number')assert.ok(Number.isFinite(n),`${String(k)}: invalid canvas coordinate`)}}})}
-function element(){return {innerHTML:'',textContent:'',hidden:false,style:{},dataset:{},handlers:{},classList:{held:false,add(){},remove(){},toggle(k,v){this.held=v}},clientWidth:1280,clientHeight:720,addEventListener(type,fn){(this.handlers[type]??=[]).push(fn)},setAttribute(){},focus(){},getContext:()=>context(),querySelector(){return null},setPointerCapture(){}}}
+function element(){return {innerHTML:'',textContent:'',hidden:false,style:{setProperty(){}},dataset:{},handlers:{},classList:{held:false,add(){},remove(){},toggle(k,v){this.held=v}},clientWidth:1280,clientHeight:720,addEventListener(type,fn){(this.handlers[type]??=[]).push(fn)},setAttribute(){},focus(){},getContext:()=>context(),querySelector(){return null},setPointerCapture(){}}}
 test('chapter transitions, persisted unlocks, retry chapter, and interrupted touches work through the web entry',async()=>{
   const elements=new Map(),handlers={},windowHandlers={},timers=new Map(),buttons=['left','right','run','jump','attack'].map(key=>Object.assign(element(),{dataset:{key}}));let timerId=0,saved,activeGame;
   const originalReset=Game.prototype.reset,nativeTimeout=globalThis.setTimeout,nativeClear=globalThis.clearTimeout;
   Game.prototype.reset=function(...args){activeGame=this;return originalReset.apply(this,args)};
   globalThis.window=globalThis;globalThis.matchMedia=()=>({matches:false});globalThis.localStorage={getItem:()=>null,setItem(k,v){saved=JSON.parse(v)}};
-  globalThis.document={querySelector:s=>{if(!elements.has(s))elements.set(s,element());return elements.get(s)},querySelectorAll:()=>buttons,addEventListener:(type,fn)=>handlers[type]=fn,fonts:{ready:Promise.resolve()}};
+  globalThis.document={querySelector:s=>{if(!elements.has(s))elements.set(s,element());return elements.get(s)},querySelectorAll:()=>buttons,addEventListener:(type,fn)=>{const previous=handlers[type];handlers[type]=event=>{previous?.(event);fn(event)}},fonts:{ready:Promise.resolve()}};
   globalThis.addEventListener=(type,fn)=>(windowHandlers[type]??=[]).push(fn);
   Object.defineProperty(globalThis,'navigator',{value:{getGamepads:()=>[],vibrate(){}},configurable:true});
   globalThis.Image=class{naturalWidth=1774;naturalHeight=887;set src(value){queueMicrotask(()=>this.onload())}async decode(){}};
@@ -19,11 +19,11 @@ test('chapter transitions, persisted unlocks, retry chapter, and interrupted tou
   try{
     await import('../src/main.js');const screen=elements.get('#screen');
     const click=action=>handlers.click({target:{closest:()=>({dataset:{action}})}});
-    const press=(key,id,type='pointerdown')=>buttons.find(b=>b.dataset.key===key).handlers[type].forEach(fn=>fn({pointerId:id,pointerType:'touch',preventDefault(){}}));
+    const press=(key,id,type='pointerdown')=>buttons.find(b=>b.dataset.key===key).handlers[type].forEach(fn=>fn({type,pointerId:id,pointerType:'touch',preventDefault(){}}));
     const fireTimer=ms=>{const entry=[...timers].find(([,t])=>t.ms===ms);assert.ok(entry,`Missing ${ms}ms story timer`);timers.delete(entry[0]);entry[1].fn()};
     click('enter');click('levels');assert.match(screen.innerHTML,/Locked · Complete Level 1/);click('kingdom');assert.match(screen.innerHTML,/SELECT LEVEL/);
     click('start');click('play');
-    for(const trigger of [()=>click('togglePause'),()=>windowHandlers.blur.forEach(fn=>fn()),()=>windowHandlers.orientationchange.forEach(fn=>fn()),()=>{document.hidden=true;handlers.visibilitychange();document.hidden=false}]){
+    for(const trigger of [()=>click('togglePause'),()=>windowHandlers.blur.forEach(fn=>fn()),()=>{document.hidden=true;handlers.visibilitychange();document.hidden=false}]){
       ['right','run','jump','attack'].forEach((key,i)=>press(key,i+1));assert.ok(buttons.filter(b=>b.dataset.key!=='left').every(b=>b.classList.held));trigger();assert.ok(buttons.every(b=>!b.classList.held));assert.equal(activeGame.mode,'paused');click('togglePause');assert.equal(activeGame.mode,'playing');
     }
     press('right',1);activeGame.damage(true);assert.ok(buttons.every(b=>!b.classList.held));activeGame.respawn();

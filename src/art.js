@@ -10,8 +10,9 @@ function line(c,points,color,width=3){c.beginPath();points.forEach(([x,y],i)=>i?
 export function drawMike(c,x,y,scale=1,superMode=false,pose='idle',t=0,face=1,gait=null){
   if(drawCharacter(c,superMode?'super':'normal',x,y,scale,pose,t,face,gait))return;
   c.save();c.translate(x,y);c.scale(scale*face,scale);c.lineJoin='round';
-  const run=pose==='run',jump=pose==='jump',win=pose==='win',duck=pose==='duck';
-  const stride=run?Math.sin(t*15)*10:0;const bob=run?Math.abs(Math.sin(t*15))*2:Math.sin(t*2)*1.1;
+  const run=pose==='run'||pose==='walk',jump=['jump','fall','hurt','dead'].includes(pose),win=pose==='win',duck=pose==='duck';
+  const phase=gait?gait.phase*Math.PI*2:t*15;
+  const stride=run?Math.sin(phase)*(pose==='walk'?7:10):0;const bob=run?Math.abs(Math.sin(phase))*2:Math.sin(t*2)*1.1;
   c.translate(0,bob);if(duck)c.scale(1,.72);
   const wide=superMode?1.24:1;c.save();c.scale(wide,superMode?1.14:1);
   ellipse(c,0,3,20,5,'#193c3226');
@@ -76,7 +77,7 @@ function tree(c,x,y,s,t=0){c.save();c.translate(x,y);c.scale(s,s);line(c,[[0,0],
 function castle(c,x,y,s=1){c.save();c.translate(x,y);c.scale(s,s);rect(c,-65,-110,130,110,'#a7bda6',3);rect(c,-98,-163,44,163,'#9ab49f',4);rect(c,53,-163,44,163,'#9ab49f',4);path(c,[[-105,-161],[-76,-207],[-47,-161]],'#7d9e8c');path(c,[[47,-161],[75,-207],[104,-161]],'#7d9e8c');rect(c,-14,-55,28,55,'#617f72',14);for(const xx of [-77,76]){rect(c,xx-5,-137,10,22,'#587b70',5);line(c,[[xx,-206],[xx,-230]],'#638571',2);path(c,[[xx,-230],[xx+23,-224],[xx,-216]],'#cfbd7c')}for(let i=-50;i<55;i+=25)rect(c,i,-120,13,15,'#a7bda6');c.restore()}
 export class Renderer {
   constructor(canvas){this.canvas=canvas;this.c=canvas.getContext('2d');this.w=1280;this.h=720;this.reduced=false}
-  resize(){const ratio=this.canvas.clientWidth/this.canvas.clientHeight;this.w=Math.round(720*ratio);this.canvas.width=this.w;this.canvas.height=720}
+  resize(){const {clientWidth:w,clientHeight:h}=this.canvas;if(!(w>0&&h>0))return;this.w=Math.max(1,Math.round(720*w/h));if(this.canvas.width!==this.w)this.canvas.width=this.w;if(this.canvas.height!==720)this.canvas.height=720}
   background(g,menu=false){
     const c=this.c,w=this.w,t=this.reduced?0:g.time,cave=g.level.cave&&!menu,cam=menu?0:g.camera;
     if(g.levelId===5&&!menu){escapeBackground(c,g,w,t);return}
@@ -143,9 +144,9 @@ export class Renderer {
     for(const e of g.level.enemies)if(e.alive&&!e.hidden&&e.x>g.camera-100&&e.x<g.camera+this.w+100){if(e.faction==='chase'){drawChaseEnemy(c,e,g.time);continue}if(e.faction==='shadow'){drawShadowEnemy(c,e,g.time,drawCat);continue}if(e.faction==='dog'){drawDog(c,e,g.time);continue}drawCat(c,e.x+e.w/2,e.y+e.h,e.type==='guard'?.94:e.type==='chonky'?.85:.72,e.type,g.time);if(e.type==='guard'){c.fillStyle='#f5d990';c.font='12px sans-serif';c.textAlign='center';c.fillText('♥'.repeat(e.hp),e.x+e.w/2,e.y-15)}if(e.type==='armor'&&e.hp===1){c.fillStyle='#fff4d7';c.font='12px sans-serif';c.fillText('!',e.x+20,e.y-10)}}
     const p=g.player;c.save();if(p.invuln>0&&Math.sin(g.time*35)>0)c.globalAlpha=.45;
     if(g.buffs.blessing>0||g.buffs.bell>0||g.transform>0){const xx=p.x+p.w/2,yy=p.y+p.h/2;const glow=c.createRadialGradient(xx,yy,5,xx,yy,90);glow.addColorStop(0,'#fff2a899');glow.addColorStop(1,'#fff2a800');ellipse(c,xx,yy,90,90,glow)}
-    let pose=g.completed?(g.levelId===3?(p.vx>0?'run':'idle'):'win'):p.attack>0?'attack':p.duck?'duck':!p.grounded?'jump':Math.abs(p.vx)>15?'run':'idle';
+    let pose=g.completed?(g.levelId===3?(p.vx>0?'walk':'idle'):'win'):p.animation||(p.attack>0?'attack':p.duck?'duck':!p.grounded?'jump':Math.abs(p.vx)>15?'walk':'idle');
     const pipeOffset=g.transition?(1-g.transition.timer/.6)*80:0;
-    if(!g.transition||g.transition.timer>.08)drawMike(c,p.x+p.w/2,p.y+p.h+pipeOffset,p.super?.69:.59,p.super,pose,g.time,p.face,{phase:p.gaitPhase||0});
+    if(!g.transition||g.transition.timer>.08)drawMike(c,p.x+p.w/2,p.y+p.h+pipeOffset,p.super?.69:.59,p.super,pose,g.time,p.face,{phase:p.gaitPhase||0,stride:p.gaitStride||.8,blend:p.gaitBlend||0,speed:Math.abs(p.vx),stateTime:p.animationTime||0});
     if(p.attack>.1&&!p.attackMove?.projectile&&!p.attackMove?.electric){line(c,[[p.x+p.w/2+p.face*40,p.y+30],[p.x+p.w/2+p.face*72,p.y+28]],'#ffe8a4',7);line(c,[[p.x+p.w/2+p.face*42,p.y+43],[p.x+p.w/2+p.face*62,p.y+46]],'#f7d375',4)}
     if(g.completed&&g.levelId===2){c.font='bold 34px Outfit,sans-serif';c.fillStyle='#fff4cc';c.textAlign='center';c.fillText(g.winTime<1.4?'“MEOW!”':'Prince Xiaboo is close...',g.main.goal+80,300)}c.restore();
     if(g.levelId===5)escapeEffects(c,g,this.reduced?0:g.time);

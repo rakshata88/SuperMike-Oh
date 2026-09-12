@@ -33,7 +33,5 @@ export function createFullscreenController({shell,notice,button,doc=globalThis.d
   }
   const changed=()=>{if(native&&!nativeElement()){active=false;native=false;unlock();update()}};
   doc.addEventListener('fullscreenchange',changed);doc.addEventListener('webkitfullscreenchange',changed);
-  win.addEventListener('resize',()=>{if(active)update()});
-  orientation()?.addEventListener?.('change',()=>{if(active)update()});
-  return {toggle,exit,handleEscape(){if(active&&!native){void exit();return true}return false},get active(){return active}};
+  return {toggle,exit,refresh:update,handleEscape(){if(active&&!native){void exit();return true}return false},get active(){return active}};
 }

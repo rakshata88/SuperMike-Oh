@@ -78,7 +78,7 @@ test('tower can be climbed by Normal Mike without run or unavailable directional
   // Real collision and jump simulation for every ascending tower step.
   const g=game();g.main.enemies=[];g.main.hazards=[];
   for(const [x,y,targetX,targetY] of [[14200,590,14325,480],[14490,480,14650,375],[14800,375,14945,275],[15070,275,15240,230]]){
-    place(g,x,y-g.player.h);let landed=false;
+    place(g,x,y-g.player.h);let landed=false;g.step(1/120,{}); // Release A between distinct jumps.
     for(let i=0;i<180;i++){g.step(1/120,{right:g.player.x<targetX,jump:true,jumpPressed:i===0});if(i>20&&g.player.grounded&&g.player.y+g.player.h<=targetY+30){landed=true;break}}
     assert.ok(landed,`Jump from ${x}, ${y} to ${targetX}, ${targetY}`);
   }

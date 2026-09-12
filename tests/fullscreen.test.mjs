@@ -17,7 +17,7 @@ test('mobile requests fullscreen before landscape, then releases its lock on exi
 });
 for(const options of [{lock:false},{rejectLock:true},{request:false,lock:false},{rejectRequest:true,rejectLock:true}])test(`portrait fallback is usable: ${JSON.stringify(options)}`,async()=>{
   const s=setup(options);await s.controller.toggle();assert.equal(s.controller.active,true);assert.equal(s.notice.hidden,false);
-  s.orientation.type='landscape-primary';s.events.orientation();assert.equal(s.notice.hidden,true);await s.controller.exit();assert.equal(s.controller.active,false);
+  s.orientation.type='landscape-primary';s.controller.refresh();assert.equal(s.notice.hidden,true);await s.controller.exit();assert.equal(s.controller.active,false);
 });
 test('desktop fullscreen does not request rotation',async()=>{const s=setup({touch:false});await s.controller.toggle();assert.ok(!s.calls.includes('landscape'));assert.equal(s.notice.hidden,true)});
 test('native browser exit cleans up orientation and fallback Escape exits without fullscreen APIs',async()=>{

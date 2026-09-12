@@ -1,4 +1,6 @@
 import {createFullscreenController} from './fullscreen.js';
+import {createViewportController} from './viewport.js';
+import {bindGameplayGestures} from './touch.js';
 import {canSelectLevel,completeLevel,completedLevels} from './progress.js';
 import {escapeSection} from './level5.js';
 import {Game} from './engine.js';
@@ -96,35 +98,33 @@ document.addEventListener('click',e=>{const a=e.target.closest('[data-action]');
 document.addEventListener('change',e=>{if(e.target.dataset.setting){data.settings[e.target.dataset.setting]=e.target.checked;audio.unlock();settingsApply();persist()}});
 $('#sound-button').addEventListener('click',()=>{data.settings.sound=!data.settings.sound;audio.unlock();settingsApply();persist();if(audio.enabled)audio.sfx('coin')});
 $('#pause-button').addEventListener('click',pause);
-const keys={},touchKeys={},keyMap={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',Space:'jump',ArrowUp:'jump',KeyW:'jump',ShiftLeft:'run',ShiftRight:'run',ArrowDown:'down',KeyS:'down',KeyX:'attack',KeyF:'attack'};
-let jumpPressed=false,attackPressed=false,touchInput;
-function clearInput(){for(const k in keys)delete keys[k];for(const k in touchKeys)delete touchKeys[k];touchInput?.clear();jumpPressed=false;attackPressed=false;previousTouchRun=false;game.player.vx=0}
+const heldCodes=new Set(),keys={},touchKeys={},keyMap={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',Space:'jump',ArrowUp:'jump',KeyW:'jump',ShiftLeft:'run',ShiftRight:'run',ArrowDown:'down',KeyS:'down',KeyX:'attack',KeyF:'attack'};
+let jumpPressed=false,jumpReleased=false,attackPressed=false,touchInput;
+function clearInput(){heldCodes.clear();for(const k in keys)delete keys[k];for(const k in touchKeys)delete touchKeys[k];touchInput?.clear();jumpPressed=false;jumpReleased=false;attackPressed=false;previousTouchRun=false;game.clearJumpInput();game.player.vx=0}
 document.addEventListener('keydown',e=>{
   if(e.code==='Enter'&&!e.repeat&&['playing','paused','levelintro'].includes(game.mode)){e.preventDefault();togglePause();return}
   if(e.code==='Escape'){if(fullscreen.handleEscape()){e.preventDefault();return}if(game.mode==='playing'){e.preventDefault();pause()}else if(game.mode==='paused'){e.preventDefault();resume()}return}
   if(e.code==='Tab'&&screen.querySelector('[role="dialog"]')){const f=[...screen.querySelectorAll('button,input')],i=f.indexOf(document.activeElement);if(e.shiftKey&&i<=0){e.preventDefault();f.at(-1)?.focus()}else if(!e.shiftKey&&i===f.length-1){e.preventDefault();f[0]?.focus()}return}
-  if(game.mode!=='playing')return;const key=keyMap[e.code];if(!key)return;if(key==='left'||key==='right')touchMovementUsed=false;e.preventDefault();if(!keys[key]&&!e.repeat){if(key==='jump')jumpPressed=true;if(key==='attack')attackPressed=true}keys[key]=true;
+  if(game.mode!=='playing')return;const key=keyMap[e.code];if(!key)return;if(key==='left'||key==='right')touchMovementUsed=false;e.preventDefault();if(!keys[key]&&!e.repeat){if(key==='jump'&&!touchKeys.jump&&!gamepadPrevious.jump)jumpPressed=true;if(key==='attack')attackPressed=true}if(!e.repeat)heldCodes.add(e.code);keys[key]=[...heldCodes].some(code=>keyMap[code]===key);
 });
-document.addEventListener('keyup',e=>{const key=keyMap[e.code];if(key){keys[key]=false;if(game.mode==='playing')e.preventDefault()}});
+document.addEventListener('keyup',e=>{const key=keyMap[e.code];if(key){heldCodes.delete(e.code);keys[key]=[...heldCodes].some(code=>keyMap[code]===key);if(key==='jump'&&!keys.jump&&!touchKeys.jump&&!gamepadPrevious.jump)jumpReleased=true;if(game.mode==='playing')e.preventDefault()}});
 touchInput=bindTouchControls([...document.querySelectorAll('[data-key]')],touchKeys,{
-  enabled:()=>game.mode==='playing',unlock:()=>audio.unlock(),
-  onPress:key=>{if(key==='left'||key==='right')touchMovementUsed=true;if(key==='jump')jumpPressed=true;if(key==='attack')attackPressed=true;if(['jump','run','attack'].includes(key))haptic()},
+  enabled:()=>game.mode==='playing'&&!viewport.blocked,unlock:()=>audio.unlock(),
+  onRelease:key=>{if(key==='jump'&&!keys.jump&&!gamepadPrevious.jump)jumpReleased=true},
+  onPress:key=>{if(key==='left'||key==='right')touchMovementUsed=true;if(key==='jump'&&!keys.jump&&!gamepadPrevious.jump)jumpPressed=true;if(key==='attack')attackPressed=true;if(['jump','run','attack'].includes(key))haptic()},
 });
 function haptic(){try{navigator.vibrate?.(12)}catch{}}
 for(const element of [canvas,$('#touch-controls')]){element.addEventListener('contextmenu',e=>e.preventDefault());element.addEventListener('dragstart',e=>e.preventDefault())}
 $('#touch-controls').addEventListener('click',e=>{if(e.target.closest('[data-action="togglePause"]'))haptic()});
-const orientationReset=()=>{clearInput();if(game.mode==='playing')pause();renderer.resize()};
-window.addEventListener('orientationchange',orientationReset);
-window.screen?.orientation?.addEventListener('change',orientationReset);
+bindGameplayGestures($('#game-shell'),()=>game.mode==='playing');
 window.addEventListener('blur',()=>{clearInput();if(game.mode==='playing')pause()});
 document.addEventListener('visibilitychange',()=>{clearInput();if(document.hidden&&game.mode==='playing')pause()});
 window.addEventListener('pagehide',()=>{if(['playing','paused'].includes(game.mode)){data.save=game.snapshot();persist()}});
-function gamepad(){const pad=navigator.getGamepads?.()?.find(p=>p?.connected);if(!pad){gamepadPrevious={};return {}}const b=i=>pad.buttons[i]?.pressed;const state={left:pad.axes[0]<-.25||b(14),right:pad.axes[0]>.25||b(15),down:pad.axes[1]>.5||b(13),jump:b(0),run:b(1)||b(5),attack:b(2),pause:b(9)};if(state.jump&&!gamepadPrevious.jump)jumpPressed=true;if(state.attack&&!gamepadPrevious.attack)attackPressed=true;if(state.pause&&!gamepadPrevious.pause){if(game.mode==='playing')pause();else if(game.mode==='paused')resume()}gamepadPrevious=state;return state}
-const fullscreen=createFullscreenController({shell:$('#game-shell'),notice:$('#rotate-notice'),button:$('#session-fullscreen'),onNotice:toast,onChange:()=>{clearInput();if(game.mode==='playing')pause();renderer.resize();game.viewWidth=renderer.w}});
-new ResizeObserver(()=>{renderer.resize();game.viewWidth=renderer.w}).observe(canvas);
-renderer.resize();game.viewWidth=renderer.w;
+function gamepad(){const pad=navigator.getGamepads?.()?.find(p=>p?.connected);if(!pad){gamepadPrevious={};return {}}const b=i=>pad.buttons[i]?.pressed;const state={left:pad.axes[0]<-.25||b(14),right:pad.axes[0]>.25||b(15),down:pad.axes[1]>.5||b(13),jump:b(0),run:b(1)||b(5),attack:b(2),pause:b(9)};if(state.jump&&!gamepadPrevious.jump&&!keys.jump&&!touchKeys.jump)jumpPressed=true;if(!state.jump&&gamepadPrevious.jump&&!keys.jump&&!touchKeys.jump)jumpReleased=true;if(state.attack&&!gamepadPrevious.attack)attackPressed=true;if(state.pause&&!gamepadPrevious.pause){if(game.mode==='playing')pause();else if(game.mode==='paused')resume()}gamepadPrevious=state;return state}
+const fullscreen=createFullscreenController({shell:$('#game-shell'),button:$('#session-fullscreen'),onNotice:toast,onChange:()=>{clearInput();viewport.schedule()}});
+const viewport=createViewportController({shell:$('#game-shell'),canvas,notice:$('#rotate-notice'),renderer,game,onRotate:clearInput});
 let last=performance.now();
-function frame(now){const dt=Math.min((now-last)/1000,.035);last=now;const pad=gamepad();const input={};for(const key of ['left','right','jump','down','run','attack'])input[key]=keys[key]||touchKeys[key]||pad[key];input.touchMovement=touchMovementUsed&&!keys.left&&!keys.right&&!pad.left&&!pad.right;input.touchRunReleased=previousTouchRun&&!touchKeys.run&&!keys.run&&!pad.run;previousTouchRun=!!touchKeys.run;input.jumpPressed=jumpPressed;input.attackPressed=attackPressed;game.step(dt,input);jumpPressed=false;attackPressed=false;renderer.render(game);audio.step(dt,game.level.cave,game.mode==='playing'&&!game.scene,game.levelId===5&&game.chaseRegion==='train'?'train':game.main.music);if(game.mode==='playing'&&game.elapsed-lastAutoSave>12){lastAutoSave=game.elapsed;data.save=game.snapshot();persist()}requestAnimationFrame(frame)}
+function frame(now){const dt=Math.min((now-last)/1000,.035);last=now;const pad=gamepad();const input={};for(const key of ['left','right','jump','down','run','attack'])input[key]=keys[key]||touchKeys[key]||pad[key];input.touchMovement=touchMovementUsed&&!keys.left&&!keys.right&&!pad.left&&!pad.right;input.touchRunReleased=previousTouchRun&&!touchKeys.run&&!keys.run&&!pad.run;previousTouchRun=!!touchKeys.run;input.jumpPressed=jumpPressed;input.jumpReleased=jumpReleased;input.attackPressed=attackPressed;if(!viewport.blocked)game.step(dt,input);jumpPressed=false;jumpReleased=false;attackPressed=false;renderer.render(game);audio.step(dt,game.level.cave,game.mode==='playing'&&!game.scene,game.levelId===5&&game.chaseRegion==='train'?'train':game.main.music);if(game.mode==='playing'&&game.elapsed-lastAutoSave>12){lastAutoSave=game.elapsed;data.save=game.snapshot();persist()}requestAnimationFrame(frame)}
 game.mode='loading';$('#game-shell').classList.add('is-opening');$('#game-bottom').hidden=true;
 screen.innerHTML=openingMarkup();requestAnimationFrame(frame);
 const failures=await initializeOpening([

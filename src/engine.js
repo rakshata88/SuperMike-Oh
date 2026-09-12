@@ -5,11 +5,13 @@ import {FLOOR} from './level.js';
 import {createWorld,levels} from './levels.js';
 import {currentPlayerForm} from './forms.js';
 import {advanceGait} from './gait.js';
+import {updatePlayerAnimation} from './animation.js';
 export const overlap=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export class Game {
   constructor(onEvent=()=>{}){this.onEvent=onEvent;this.mode='menu';this.time=0;this.camera=0;this.viewWidth=1280;this.particles=[];this.reset();this.mode='menu'}
   reset(save=null,levelId=save?.levelId||1){
+    this.jumpArmed=true;
     this.levelId=levels[levelId]?levelId:1;this.main=createWorld(this.levelId);this.cavern=createWorld(this.levelId,true);this.rooms=this.levelId===5?{den:this.cavern,cargo:createWorld(5,'cargo')}:{default:this.cavern};this.level=this.main;this.player={...this.main.spawn,w:34,h:59,vx:0,vy:0,grounded:false,face:1,super:false,invuln:0,attack:0,duck:false};
     this.coins=save?.coins||0;this.score=save?.score||0;this.paws=save?.paws||0;this.lives=save?.lives||3;this.elapsed=save?.elapsed||0;this.kills=save?.kills||0;this.checkpoint=save?.checkpoint||0;this.maxX=save?.maxX||150;this.collected=new Set(save?.collected||[]);
     for(const l of [this.main,...Object.values(this.rooms)])for(const it of l.items)it.taken=this.collected.has(it.id);
@@ -30,15 +32,19 @@ export class Game {
     if((p.form==='fire'||p.form==='thunder'||p.form==='dash')&&!fatal){const poweredForm=p.form;p.form='super';if(poweredForm==='thunder'||poweredForm==='dash'){p.thunderTime=0;p.dashTime=0;p.dashBoost=0;p.attack=0}p.invuln=2;p.vy=-280;this.emit('hurt');this.emit('toast',(poweredForm==='dash'?'Dash Mike':poweredForm==='thunder'?'Thunder Mike':'Fire Mike')+' → Super Mike. Keep going!')}
     else if(p.super&&!fatal){p.form='normal';p.super=false;p.y+=19;p.h=59;p.w=34;p.invuln=2;p.vy=-280;p.vx=-p.face*180;this.emit('hurt');this.emit('toast','Back to everyday Mike. Keep going!')}
     else{this.lives--;this.deathTimer=.9;p.vy=-340;p.vx=0;this.jumpBuffer=0;this.pipeDwell=0;this.emit('inputreset');this.emit('death')}
-    this.emit('state');
+    p.grounded=false;p.support=null;this.coyote=0;this.jumpBuffer=0;p.landTime=0;p.hurtTime=.22;
+    updatePlayerAnimation(p,0,{dead:this.deathTimer>0});this.emit('state');
   }
   respawn(){
+    this.player.landTime=0;this.player.hurtTime=0;this.player.animation='fall';this.player.animationTime=0;this.clearJumpInput();
     this.projectiles=[];this.landingNoise=0;this.windPush=0;this.player.dashBoost=0;this.player.knockback=0;this.scene=null;if(this.levelId===5){if(!this.main.gateOpen)resetChaseBoss(this);else this.scene={kind:'airshipEnding',time:0}}if(this.levelId===4&&!this.main.gateOpen)resetShadowBoss(this);if(this.levelId===4&&this.main.gateOpen)this.scene={kind:'escape',time:0};if(this.levelId===3&&this.main.boss&&!this.main.gateOpen){Object.assign(this.main.boss,{x:25180,y:FLOOR-96,hp:5,state:'waiting',stateTime:0,pattern:0,invuln:0,vx:0,vy:0});this.main.arena.active=false}for(const s of this.main.platforms)if(s.type==='fallingPlatform'){s.y=s.originY;s.fallTimer=null;s.broken=false;s.fallReset=0}this.jumpBuffer=0;this.pipeDwell=0;this.player.attack=0;this.player.duck=false;this.player.support=null;this.buffs.bell=0;this.emit('inputreset');
     this.level=this.main;const p=this.player;p.x=this.checkpoint||150;p.y=450;p.vx=0;p.vy=0;p.form='normal';p.super=false;p.h=59;p.w=34;p.invuln=2;p.grounded=false;this.camera=Math.max(0,p.x-300);this.deathTimer=0;this.transition=null;this.coyote=0;
     for(const e of this.main.enemies)if(Math.abs(e.x-p.x)<250)e.x=e.max;
     this.emit('state');this.emit('save');
   }
-  travel(pipe){this.projectiles=[];this.transition={timer:.6,pipe};this.player.vx=0;this.player.vy=0;this.player.attack=0;this.jumpBuffer=0;this.pipeDwell=0;this.emit('inputreset');this.emit('pipe')}
+  clearJumpInput(){this.jumpBuffer=0;this.jumpArmed=true}
+  startJump(){const p=this.player;p.vy=-(p.super?760:700)*(this.buffs.jump>0?1.2:1)*(this.buffs.bell>0?1.08:1);p.grounded=false;p.support=null;p.landTime=0;this.coyote=0;this.jumpBuffer=0;this.emit('jump')}
+  travel(pipe){this.projectiles=[];this.transition={timer:.6,pipe};this.player.vx=0;this.player.vy=0;this.player.grounded=false;this.player.support=null;this.coyote=0;this.player.attack=0;this.jumpBuffer=0;this.pipeDwell=0;this.emit('inputreset');this.emit('pipe')}
   pickup(it){
     it.taken=true;this.collected.add(it.id);const p=this.player;
     if(this.levelId===5&&chasePickup(this,it)){}
@@ -69,7 +75,9 @@ export class Game {
     if(this.deathTimer>0){this.deathTimer-=dt;p.vy+=1200*dt;p.y+=p.vy*dt;if(this.deathTimer<=0){if(this.lives<=0){this.mode='gameover';this.emit('gameover')}else this.respawn()}return}
     if(this.levelId===4)updateCastle(this,dt);if(this.levelId===5){updateEscape(this,dt,input);if(this.scene)return}
     this.landingNoise=Math.max(0,this.landingNoise-dt);p.invuln=Math.max(0,p.invuln-dt);p.attack=Math.max(0,p.attack-dt);for(const b in this.buffs)this.buffs[b]=Math.max(0,this.buffs[b]-dt);
-    if(input.jumpPressed)this.jumpBuffer=.13;else this.jumpBuffer=Math.max(0,this.jumpBuffer-dt);
+    p.landTime=Math.max(0,(p.landTime||0)-dt);p.hurtTime=Math.max(0,(p.hurtTime||0)-dt);
+    if(input.jumpReleased||(!input.jump&&!input.jumpPressed))this.jumpArmed=true;
+    if(input.jumpPressed&&this.jumpArmed){this.jumpBuffer=.1;this.jumpArmed=false}else this.jumpBuffer=Math.max(0,this.jumpBuffer-dt);
     this.coyote=p.grounded?.11:Math.max(0,this.coyote-dt);
     p.duck=!!input.down&&p.grounded;
     let dir=(input.right?1:0)-(input.left?1:0);if(p.duck)dir=0;if(dir)p.face=dir;
@@ -81,24 +89,36 @@ export class Game {
     // Touch release is immediate; desktop retains the original acceleration physics.
     if(input.touchMovement&&!dir)p.vx=0;
     if(input.touchRunReleased)p.vx=clamp(p.vx,-maxSpeed*(this.buffs.bell>0?1.12:1),maxSpeed*(this.buffs.bell>0?1.12:1));
-    if(this.jumpBuffer>0&&this.coyote>0){p.vy=-(p.super?760:700)*(this.buffs.jump>0?1.2:1)*(this.buffs.bell>0?1.08:1);p.grounded=false;this.coyote=0;this.jumpBuffer=0;this.emit('jump')}
+    if(this.jumpBuffer>0&&this.coyote>0)this.startJump();
     if(!input.jump&&p.vy<-240)p.vy+=2100*dt;
     if(input.attackPressed)this.attack();
-    for(const s of this.level.platforms)if(s.type==='fallingPlatform'){if(s.broken){s.fallReset-=dt;if(s.fallReset<=0){s.broken=false;s.y=s.originY;s.fallTimer=null}}else if(s.fallTimer!=null){s.fallTimer-=dt;if(s.fallTimer<=0){s.y+=220*dt;if(s.y>760){s.broken=true;s.fallReset=3}}}}
+    for(const s of this.level.platforms){s.previousY=s.y;s.previousX=s.x;if(s.type==='fallingPlatform'){if(s.broken){s.fallReset-=dt;if(s.fallReset<=0){s.broken=false;s.y=s.originY;s.fallTimer=null}}else if(s.fallTimer!=null){s.fallTimer-=dt;if(s.fallTimer<=0){s.y+=220*dt;if(s.y>760){s.broken=true;s.fallReset=3}}}}}
     const platforms=this.level.platforms.filter(s=>!s.broken);
-    for(const s of platforms){s.dx=0;s.dy=0;if(s.type==='moving'||s.type==='gear'){const oldX=s.x,oldY=s.y;if(s.type==='gear'){s.x=s.cx+Math.cos(this.time*s.speed+s.phase)*s.radius-s.w/2;s.y=s.cy+Math.sin(this.time*s.speed+s.phase)*s.radius-s.h/2}else if(s.powered&&!this.level.mechanisms?.some(m=>m.timer>0)){s[s.axis]+=clamp(s.origin-s[s.axis],-90*dt,90*dt)}else s[s.axis]=s.origin+Math.sin(this.time*s.speed)*s.range;s.dx=s.x-oldX;s.dy=s.y-oldY;if(p.grounded&&p.support===s){p.x+=s.dx;p.y+=s.dy}}}
+    for(const s of platforms){if(s.type==='moving'||s.type==='gear'){if(s.type==='gear'){s.x=s.cx+Math.cos(this.time*s.speed+s.phase)*s.radius-s.w/2;s.y=s.cy+Math.sin(this.time*s.speed+s.phase)*s.radius-s.h/2}else if(s.powered&&!this.level.mechanisms?.some(m=>m.timer>0)){s[s.axis]+=clamp(s.origin-s[s.axis],-90*dt,90*dt)}else s[s.axis]=s.origin+Math.sin(this.time*s.speed)*s.range} s.dx=s.x-s.previousX;s.dy=s.y-s.previousY;if(p.grounded&&p.support===s&&p.vy===0){p.x+=s.dx;p.y+=s.dy}}
     const strideStart=p.x,wasGrounded=p.grounded;
     const horizontalSpeed=p.vx+(this.levelId===5?((p.dashBoost>0&&p.running&&dir===p.dashFace?200*p.dashFace:0)+(this.windPush||0)+(p.knockback>0?230*p.knockbackFace:0)):0);p.x+=horizontalSpeed*dt;
-    for(const s of platforms)if(!s.broken&&overlap(p,s)){if(this.levelId===5&&s.weak&&p.form==='dash'&&p.running&&Math.abs(p.vx)>=340){breakChaseCrate(this,s);continue}if(s.skin==='shelf'&&s.dx&&Math.abs(p.vx)<1)p.x=s.dx>0?s.x+s.w:s.x-p.w;else if(horizontalSpeed>0)p.x=s.x-p.w;else if(horizontalSpeed<0)p.x=s.x+s.w;p.vx=0}
-    p.x=clamp(p.x,0,this.level.width-p.w);if(this.level.boss&&!this.level.gateOpen){p.x=Math.min(p.x,this.level.arena.right-p.w);if(this.level.arena.active)p.x=Math.max(p.x,this.level.arena.left)}
-    const landingSpeed=p.vy,previousBottom=p.y+p.h;p.vy=Math.min(p.vy+1650*dt,950);p.y+=p.vy*dt;p.grounded=false;p.support=null;
     for(const s of platforms)if(!s.broken&&overlap(p,s)){
-      if(p.vy>=0&&previousBottom<=s.y+Math.max(8,Math.abs(s.dy||0)+3)){p.y=s.y-p.h;p.vy=0;p.grounded=true;p.support=s;if(s.type==='fallingPlatform'&&s.fallTimer==null)s.fallTimer=.85}
-      else if(p.vy<0){p.y=s.y+s.h;p.vy=0;if(s.type==='mystery'&&!s.used){s.used=true;this.pickup({id:s.id,x:s.x,y:s.y,type:s.reward});this.burst(s.x+24,s.y,'#ffe18b',12)}if(s.type==='breakable'&&p.super){s.broken=true;this.burst(s.x+s.w/2,s.y,'#bf976b',20);this.score+=100}}
+      if(p.vy>=0&&p.y+p.h<=s.previousY+.05)continue; // A rising platform top is resolved by the foot sweep below.
+      if(this.levelId===5&&s.weak&&p.form==='dash'&&p.running&&Math.abs(p.vx)>=340){breakChaseCrate(this,s);continue}if(s.skin==='shelf'&&s.dx&&Math.abs(p.vx)<1)p.x=s.dx>0?s.x+s.w:s.x-p.w;else if(horizontalSpeed>0)p.x=s.x-p.w;else if(horizontalSpeed<0)p.x=s.x+s.w;p.vx=0}
+    p.x=clamp(p.x,0,this.level.width-p.w);if(this.level.boss&&!this.level.gateOpen){p.x=Math.min(p.x,this.level.arena.right-p.w);if(this.level.arena.active)p.x=Math.max(p.x,this.level.arena.left)}
+    const landingSpeed=p.vy,previousTop=p.y,previousBottom=p.y+p.h,oldSupport=p.support;
+    p.vy=Math.min(p.vy+1650*dt,950);p.y+=p.vy*dt;p.grounded=false;p.support=null;
+    // Sweep feet across platform tops, including thin/moving ledges. A side
+    // overlap cannot become a landing, and only rounding-sized tolerance is used.
+    let floor=null,ceiling=null;
+    for(const s of platforms){
+      if(s.broken||p.x+p.w<=s.x+.01||p.x>=s.x+s.w-.01)continue;
+      const oldTop=wasGrounded&&oldSupport===s?s.y:s.previousY;
+      if(p.vy>=0&&previousBottom<=oldTop+.05&&p.y+p.h>=s.y&&(!floor||s.y<floor.y))floor=s;
+      if(p.vy<0&&previousTop>=s.previousY+s.h-.05&&p.y<=s.y+s.h&&(!ceiling||s.y+s.h>ceiling.y+ceiling.h))ceiling=s;
     }
-    if(p.grounded&&!wasGrounded&&landingSpeed>380)this.landingNoise=.18;
+    if(floor){p.y=floor.y-p.h;p.vy=0;p.grounded=true;p.support=floor;if(floor.type==='fallingPlatform'&&floor.fallTimer==null)floor.fallTimer=.85}
+    else if(ceiling){const s=ceiling;p.y=s.y+s.h;p.vy=0;if(s.type==='mystery'&&!s.used){s.used=true;this.pickup({id:s.id,x:s.x,y:s.y,type:s.reward});this.burst(s.x+24,s.y,'#ffe18b',12)}if(s.type==='breakable'&&p.super){s.broken=true;this.burst(s.x+s.w/2,s.y,'#bf976b',20);this.score+=100}}
+    if(p.grounded&&!wasGrounded){p.landTime=.07;if(landingSpeed>380)this.landingNoise=.18;if(this.jumpBuffer>0)this.startJump()}
     if(p.attack>0)for(const s of platforms)if(s.hidden&&!s.used&&Math.abs(s.x-p.x)<95&&Math.abs(s.y-p.y)<100){s.hidden=false;s.used=true;this.pickup({id:s.id,x:s.x,y:s.y,type:s.reward})}
-    if(p.grounded&&wasGrounded&&!p.duck)p.gaitPhase=advanceGait(p.gaitPhase||0,p.x-strideStart,p.super);
+    const strideTarget=.4+.6*Math.min(1,Math.abs(p.vx)/(p.super?319:285));
+    p.gaitStride=(p.gaitStride??.4)+(strideTarget-(p.gaitStride??.4))*Math.min(1,dt*12);
+    if(p.grounded&&wasGrounded&&!p.duck)p.gaitPhase=advanceGait(p.gaitPhase||0,p.x-strideStart,p.super,p.gaitStride);
     for(const pipe of this.level.pipes)if(pipe.door&&!pipe.archive&&!pipe.chase&&pipe.secret&&!pipe.revealed&&((p.x>pipe.x-100&&p.x<pipe.x+20)||this.level.platforms.some(s=>s.id&&s.used&&Math.abs(s.x-pipe.x)<150))){pipe.revealed=true;this.emit('toast','A secret door! Stand still by the dog house.')}
     if(input.down&&p.grounded)for(const pipe of this.level.pipes)if((pipe.secret||pipe.exit)&&(!pipe.door||pipe.exit||pipe.revealed)&&p.x+p.w/2>pipe.x+8&&p.x+p.w/2<pipe.x+pipe.w-8&&Math.abs(p.y+p.h-pipe.y)<8){this.travel(pipe);return}
     const restingPipe=p.grounded&&!dir&&!input.jump&&!input.attack&&!input.attackPressed&&!input.run&&this.level.pipes.find(pipe=>(pipe.secret||pipe.exit)&&(!pipe.door||pipe.exit||pipe.revealed)&&p.x+p.w/2>pipe.x+8&&p.x+p.w/2<pipe.x+pipe.w-8&&Math.abs(p.y+p.h-pipe.y)<8);
@@ -153,6 +173,10 @@ export class Game {
     if(!this.level.cave){this.maxX=Math.max(this.maxX,p.x);for(const cp of this.main.checkpoints||[this.main.checkpoint])if((!this.main.checkpoints||!this.deathTimer)&&cp>this.checkpoint&&p.x>=cp){this.checkpoint=cp;this.burst(p.x,p.y,'#f4d17b',25);this.emit('checkpoint');this.emit('toast',this.main.checkpoints&&cp===this.main.checkpoints.at(-1)?'FINAL CHECKPOINT!':'CHECKPOINT! · Your courage is saved.');this.emit('save')}
       if(this.levelId!==4&&this.levelId!==5&&!this.deathTimer&&p.x>=this.main.goal&&(!this.main.boss||this.main.gateOpen)){this.finishLevel()}
     }
+    // Stomps and enemy knockback keep their bounce mechanics, without granting
+    // another coyote jump from stale floor contact.
+    if(p.vy<0&&p.grounded){p.grounded=false;p.support=null;this.coyote=0;p.landTime=0}
+    updatePlayerAnimation(p,dt,{dead:this.deathTimer>0});
     const aim=clamp(p.x-this.viewWidth*.37+p.face*65,0,Math.max(0,this.level.width-this.viewWidth));this.camera+=(aim-this.camera)*Math.min(1,dt*4);
   }
 }

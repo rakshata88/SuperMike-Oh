@@ -4,7 +4,7 @@ import {Renderer} from '../src/art.js';
 import {Game} from '../src/engine.js';
 
 function context(){return new Proxy({}, {get(target,key){if(key in target)return target[key];if(key==='createLinearGradient'||key==='createRadialGradient')return ()=>({addColorStop(){}});return (...args)=>{for(const n of args)if(typeof n==='number')assert.ok(Number.isFinite(n),`Canvas ${String(key)} received a non-finite coordinate`)}}})}
-function element(){return {innerHTML:'',textContent:'',hidden:false,style:{},dataset:{},classList:{add(){},remove(){},toggle(){}},clientWidth:1280,clientHeight:720,addEventListener(){},setAttribute(){},focus(){},getContext:()=>context(),querySelector(){return null}}}
+function element(){return {innerHTML:'',textContent:'',hidden:false,style:{setProperty(){}},dataset:{},classList:{add(){},remove(){},toggle(){}},clientWidth:1280,clientHeight:720,addEventListener(){},setAttribute(){},focus(){},getContext:()=>context(),querySelector(){return null}}}
 
 test('renderer runs all scenes at desktop and mobile sizes with valid canvas coordinates',()=>{const canvas=element(),r=new Renderer(canvas),g=new Game();for(const width of [1280,960,640]){canvas.clientWidth=width;r.resize();g.viewWidth=r.w;for(const mode of ['menu','intro','playing','won']){g.mode=mode;for(const x of [150,3740,9500,14000,19220]){g.camera=x-150;g.player.x=x;r.render(g)}}g.level=g.cavern;g.mode='playing';g.camera=0;r.render(g);g.level=g.main}});
 

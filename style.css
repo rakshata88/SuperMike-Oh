@@ -161,3 +161,22 @@
 /* Five-button mobile layout: move, jump, run, attack. */
 .touch-controls .touch-movement{grid-template-rows:var(--pad-size);align-content:end}
 .touch-controls .touch-movement [data-key="left"],.touch-controls .touch-movement [data-key="right"]{grid-row:1}
+
+/* VisualViewport is the single source of fullscreen geometry, including iOS
+   toolbar changes. The canvas keeps a 720-unit world height and expands width. */
+.game-shell.is-fullscreen,.game-shell.is-mobile-view.is-session,.game-shell.is-mobile-view.is-portrait-view{
+  position:fixed;inset:auto;left:var(--game-vx,0px);top:var(--game-vy,0px);
+  width:var(--game-vw,100vw);height:100vh;height:var(--game-vh,100dvh);
+  max-width:none;max-height:none;min-height:0;aspect-ratio:auto;padding:0;border-radius:0;z-index:30;display:block;
+}
+.game-shell.is-fullscreen #game,.game-shell.is-mobile-view.is-session #game{width:100%;height:100%;aspect-ratio:auto}
+.game-shell.is-mobile-view.is-session .screen{inset:0}
+.game-shell.is-mobile-view .hud{top:calc(12px + env(safe-area-inset-top));left:calc(22px + env(safe-area-inset-left));right:calc(22px + env(safe-area-inset-right))}
+.game-shell.is-fullscreen:not(:has(.modal)),.game-shell.is-session:not(:has(.modal)){overscroll-behavior:none;touch-action:none}
+.rotate-notice{padding:calc(24px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left))}
+.rotate-notice .rotate-phone{border:3px solid #f5cf73;border-radius:12px;width:64px;height:100px;font-size:55px;display:grid;place-items:center;transform:rotate(-20deg);margin-bottom:10px}
+@media(any-pointer:coarse) and (max-height:430px){
+  .game-shell .touch-controls{--pad-size:clamp(48px,15vh,62px);--pad-gap:12px;bottom:calc(12px + env(safe-area-inset-bottom))}
+  .game-shell .touch-actions button{font-size:22px}
+  .game-shell .session-fullscreen{top:calc(58px + env(safe-area-inset-top));width:36px;height:36px}
+}

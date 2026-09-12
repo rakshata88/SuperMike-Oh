@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {bindTouchControls} from '../src/touch.js';
+import {bindTouchControls,bindGameplayGestures} from '../src/touch.js';
 import {Game} from '../src/engine.js';
 
 function setup(options={}){
@@ -10,9 +10,21 @@ function setup(options={}){
     setAttribute(key,value){this.attributes[key]=value},getBoundingClientRect(){return {left:0,right:70,top:0,bottom:70}},
   }));
   const state={},pressed=[],input=bindTouchControls(buttons,state,{onPress:key=>pressed.push(key),...options});
-  const send=(key,type,id)=>buttons.find(b=>b.dataset.key===key).handlers[type]({pointerId:id,pointerType:'touch',preventDefault(){}});
+  const send=(key,type,id)=>buttons.find(b=>b.dataset.key===key).handlers[type]({type,pointerId:id,pointerType:'touch',preventDefault(){}});
   return {buttons,state,pressed,input,send};
 }
+test('sliding a held pointer out and back cannot create a second A press',()=>{
+  const released=[],s=setup({onRelease:key=>released.push(key)});s.send('jump','pointerdown',1);s.send('jump','pointerleave',1);s.send('jump','pointerdown',1);assert.deepEqual(s.pressed,['jump']);assert.equal(s.state.jump,false);assert.deepEqual(released,['jump']);s.send('jump','pointerup',1);s.send('jump','pointerdown',1);assert.deepEqual(s.pressed,['jump','jump']);
+});
+test('rapid taps preserve every press/release and all four simultaneous actions',()=>{
+  const released=[],s=setup({onRelease:key=>released.push(key)});for(const [i,key] of ['right','run','attack'].entries())s.send(key,'pointerdown',i+1);
+  for(let i=0;i<20;i++){s.send('jump','pointerdown',4);assert.ok(s.state.right&&s.state.run&&s.state.attack&&s.state.jump);s.send('jump','pointerup',4)}assert.equal(s.pressed.filter(k=>k==='jump').length,20);assert.equal(released.filter(k=>k==='jump').length,20);
+});
+test('gesture prevention is non-passive, scoped to gameplay, and leaves menus clickable',()=>{
+  let active=true;const events={},shell={addEventListener(name,fn,options){assert.equal(options.passive,false);events[name]=fn}};bindGameplayGestures(shell,()=>active);
+  const fire=(name,menu=false)=>{let prevented=false;events[name]({cancelable:true,target:{closest(selector){return selector.includes('.modal')?menu:true}},preventDefault(){prevented=true}});return prevented};
+  for(const name of Object.keys(events)){assert.equal(fire(name),true);assert.equal(fire(name,true),false);active=false;assert.equal(fire(name),false);active=true}
+});
 
 test('three fingers can move, hold sprint, and jump; release ends sprint immediately',()=>{
   const {buttons,state,pressed,send}=setup();

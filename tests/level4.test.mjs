@@ -83,7 +83,7 @@ test('Normal Mike can climb clock gears and reach the high chamber route without
   const g=game();g.main.enemies=[];g.main.hazards=[];
   for(const [x,y,targetX,targetY] of [[18220,590,18320,480],[18555,480,18690,400],[18915,380,19030,280],[19265,280,19390,251],[19610,235,19740,220]]){
     const support=g.main.platforms.find(s=>s.x<=x+g.player.w&&s.x+s.w>x&&Math.abs(s.y-y)<40);
-    place(g,x,(support?.y||y)-g.player.h);g.player.support=support;let landed=false;
+    place(g,x,(support?.y||y)-g.player.h);g.player.support=support;let landed=false;g.step(1/120,{}); // Release A between distinct jumps.
     for(let i=0;i<190;i++){g.step(1/120,{right:g.player.x<targetX,jump:true,jumpPressed:i===0});if(i>20&&g.player.grounded&&g.player.x>=targetX-50&&g.player.y+g.player.h<=targetY+12){landed=true;break}}
     assert.ok(landed,`Jump ${x},${y} → ${targetX},${targetY}`);
   }

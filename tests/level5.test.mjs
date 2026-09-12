@@ -87,7 +87,7 @@ test('train gaps and the low tunnel are passable by Normal and Super Mike withou
   for(const powered of [false,true]){
     for(const car of [0,1,2,5,6,7,8,9]){const g=game();quiet(g);if(powered){g.power();g.transform=0}const d=g.main.platforms.find(s=>s.car===car);if(car===5)breakChaseCrate(g,g.main.platforms.find(s=>s.secretCrate));place(g,d.x+d.w-60,d.y-g.player.h);g.step(1/120,{right:true,jump:true,jumpPressed:true});tick(g,1.1,{right:true,jump:true});assert.equal(g.lives,3,`car ${car}`);assert.ok(g.player.x>d.x+d.w);assert.ok(g.player.grounded,`car ${car} landed`)}
     const g=game();quiet(g);if(powered){g.power();g.transform=0}place(g,14500,450-g.player.h);let jumped=false;
-    for(let i=0;i<1000&&g.player.x<15770;i++){const jump=g.player.grounded&&((g.player.x>15220&&g.player.x<15320)||(g.player.x>15440&&g.player.x<15520));g.step(1/120,{right:true,jump:true,jumpPressed:jump&&!jumped});jumped=jump}
+    for(let i=0;i<1000&&g.player.x<15770;i++){const jump=g.player.grounded&&((g.player.x>15220&&g.player.x<15320)||(g.player.x>15440&&g.player.x<15520));g.step(1/120,{right:true,jump:jump||!g.player.grounded,jumpPressed:jump&&!jumped});jumped=jump}
     assert.ok(g.player.x>=15770,`tunnel exit ${powered}: ${g.player.x}`);assert.equal(g.lives,3);assert.equal(g.player.duck,false);
   }
 });
